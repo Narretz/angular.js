@@ -298,23 +298,23 @@ function resolveElementClasses(existing, toAdd, toRemove) {
     }
   });
 
-  function splitClassesToLookup(classes) {
-    if (isString(classes)) {
-      classes = classes.split(' ');
-    }
+  return classes;
+}
 
-    var obj = {};
-    forEach(classes, function(klass) {
-      // sometimes the split leaves empty string values
-      // incase extra spaces were applied to the options
-      if (klass.length) {
-        obj[klass] = true;
-      }
-    });
-    return obj;
+function splitClassesToLookup(classes) {
+  if (isString(classes)) {
+    classes = classes.split(' ');
   }
 
-  return classes;
+  var obj = {};
+  forEach(classes, function(klass) {
+    // sometimes the split leaves empty string values
+    // incase extra spaces were applied to the options
+    if (klass.length) {
+      obj[klass] = true;
+    }
+  });
+  return obj;
 }
 
 function getDomNode(element) {
