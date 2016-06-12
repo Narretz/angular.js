@@ -447,8 +447,9 @@ var $$AnimateQueueProvider = ['$animateProvider', function($animateProvider) {
             if (existingAnimation.state === RUNNING_STATE) {
               normalizeAnimationDetails(element, newAnimation);
             } else {
-              applyGeneratedPreparationClasses(element, isStructural ? event : null, options);
 
+              // Update event and options, so that the $$postDigest function has access to
+              // the new values
               event = newAnimation.event = existingAnimation.event;
               options = mergeAnimationDetails(element, existingAnimation, newAnimation);
 
