@@ -14,11 +14,13 @@ var GIT_LOG_CMD = 'git log --grep="%s" -E --format=%s %s..HEAD';
 var GIT_TAG_CMD = 'git describe --tags --abbrev=0';
 
 var HEADER_TPL = '<a name="%s"></a>\n# %s (%s)\n\n';
+var ANCHOR_TPL = '<a name="%s"></a>\n\n';
 var LINK_ISSUE = '[#%s](https://github.com/angular/angular.js/issues/%s)';
 var LINK_COMMIT = '[%s](https://github.com/angular/angular.js/commit/%s)';
 
 var EMPTY_COMPONENT = '$$';
 
+var targetVersion;
 
 var warn = function() {
   console.log('WARNING:', util.format.apply(null, arguments));
@@ -89,7 +91,7 @@ var printSection = function(stream, title, section, printCommitLinks) {
 
   if (!components.length) return;
 
-  stream.write(util.format('\n## %s\n\n', title));
+  stream.write(util.format('\n## %s\n\n', title + ' {#' + targetVersion + '}'));
 
   components.forEach(function(name) {
     var prefix = '-';
@@ -170,6 +172,7 @@ var writeChangelog = function(stream, commits, version) {
   });
 
   stream.write(util.format(HEADER_TPL, version, version, currentDate()));
+  stream.write(util.format(ANCHOR_TPL, version + '-bug-fixes'));
   printSection(stream, 'Bug Fixes', sections.fix);
   printSection(stream, 'Features', sections.feat);
   printSection(stream, 'Performance Improvements', sections.perf);
@@ -188,6 +191,7 @@ var getPreviousTag = function() {
 
 
 var generate = function(version, file) {
+  targetVersion = version;
 
   getPreviousTag().then(function(tag) {
     console.log('Reading git log since', tag);
