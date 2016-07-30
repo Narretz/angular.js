@@ -3242,6 +3242,265 @@ describe('input', function() {
 
     }
 
+
+    describe('step', function() {
+
+      if (supportsRange) {
+        // Browsers that implement range will never allow you to set a value that doesn't match the step value
+        it('should round the input value to the nearest step on user input', function() {
+          var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" step="5" />');
+
+          helper.changeInputValueTo('5');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(5);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          helper.changeInputValueTo('10');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          helper.changeInputValueTo('9');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          helper.changeInputValueTo('7');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(5);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          helper.changeInputValueTo('7.5');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+        });
+
+        it('should round the input value to the nearest step when setting the model', function() {
+          var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" step="5" />');
+
+          scope.$apply('value = 10');
+          expect(inputElm.val()).toBe('10');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          scope.$apply('value = 5');
+          expect(inputElm.val()).toBe('5');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(5);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          scope.$apply('value = 7.5');
+          expect(inputElm.val()).toBe('10');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          scope.$apply('value = 7');
+          expect(inputElm.val()).toBe('5');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(5);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          scope.$apply('value = 9');
+          expect(inputElm.val()).toBe('10');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+        });
+
+        it('should adjust the element and model value if the step value changes on-the-fly', function() {
+          scope.step = 10;
+          var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" step="{{step}}" />');
+
+          helper.changeInputValueTo('5');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+
+          // Step changes, but value matches
+          scope.$apply('step = 5');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(inputElm.val()).toBe('10');
+
+          // Step changes, value does not match
+          scope.$apply('step = 6');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(12);
+          expect(inputElm.val()).toBe('12');
+
+          // null is ignored
+          scope.$apply('step = null');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(12);
+          expect(inputElm.val()).toBe('12');
+
+          // Step val as string
+          scope.$apply('step = "7"');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(14);
+          expect(inputElm.val()).toBe('14');
+
+          // unparsable string is ignored
+          scope.step = 'abc';
+          scope.$digest();
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(14);
+          expect(inputElm.val()).toBe('14');
+        });
+
+      } else {
+        it('should validate if "range" is not implemented', function() {
+          var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" step="10" />');
+
+          scope.$apply('value = 20');
+          expect(inputElm.val()).to('20');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(20);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          helper.changeInputValueTo('18');
+          expect(inputElm).toBeInvalid();
+          expect(inputElm.val()).to('18');
+          expect(scope.value).toBeUndefined();
+          expect(scope.form.alias.$error.step).toBeTruthy();
+
+          helper.changeInputValueTo('10');
+          expect(inputElm).toBeValid();
+          expect(inputElm.val()).to('10');
+          expect(scope.value).toBe(10);
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          scope.$apply('value = 12');
+          expect(inputElm).toBeInvalid();
+          expect(inputElm.val()).to('12');
+          expect(scope.value).toBe(12);
+          expect(scope.form.alias.$error.step).toBeTruthy();
+        });
+
+        it('should validate even if the max value changes on-the-fly', function() {
+          scope.step = 10;
+          var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" step="{{step}}" />');
+
+          helper.changeInputValueTo('10');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+
+          // Step changes, but value matches
+          scope.$apply('step = 5');
+          expect(inputElm.val()).toBe('10');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBeUndefined();
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          // Step changes, value does not match
+          scope.$apply('step = 6');
+          expect(inputElm).toBeInvalid();
+          expect(scope.value).toBe(10);
+          expect(inputElm.val()).toBe('10');
+          expect(scope.form.alias.$error.step).toBeTruthy();
+
+          // null = valid
+          scope.$apply('step = null');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(inputElm.val()).toBe('10');
+          expect(scope.form.alias.$error.step).toBeFalsy();
+
+          // Step val as string
+          scope.$apply('step = "7"');
+          expect(inputElm).toBeInvalid();
+          expect(scope.value).toBeUndefined();
+          expect(inputElm.val()).toBe('10');
+          expect(scope.form.alias.$error.step).toBeTruthy();
+
+          // unparsable string is ignored
+          scope.$apply('step = "abc"');
+          expect(inputElm).toBeValid();
+          expect(scope.value).toBe(10);
+          expect(inputElm.val()).toBe('10');
+          expect(scope.form.alias.$error.step).toBeFalsy();
+        });
+      }
+    });
+
+    describe('ngStep', function() {
+
+      it('should validate', function() {
+        var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" ng-step="5" />');
+
+        scope.$apply('value = 5');
+        expect(inputElm).toBeValid();
+        expect(inputElm.val()).toBe('5');
+        expect(scope.value).toBe(5);
+        expect(scope.form.alias.$error.step).toBeFalsy();
+
+        helper.changeInputValueTo('7');
+        expect(inputElm).toBeInvalid();
+        expect(inputElm.val()).toBe('7');
+        expect(scope.value).toBeUndefined();
+        expect(scope.form.alias.$error.step).toBeTruthy();
+
+        helper.changeInputValueTo('10');
+        expect(inputElm).toBeValid();
+        expect(inputElm.val()).toBe('10');
+        expect(scope.value).toBe(10);
+        expect(scope.form.alias.$error.step).toBeFalsy();
+
+        scope.$apply('value = 12');
+        expect(inputElm).toBeInvalid();
+        expect(inputElm.val()).toBe('12');
+        expect(scope.value).toBe(12);
+        expect(scope.form.alias.$error.step).toBeTruthy();
+      });
+
+      it('should validate even if the ngStep value changes on-the-fly', function() {
+        scope.step = 10;
+        var inputElm = helper.compileInput('<input type="range" ng-model="value" name="alias" ng-step="step" />');
+
+        helper.changeInputValueTo('10');
+        expect(inputElm).toBeValid();
+        expect(scope.value).toBe(10);
+
+        // Step changes, but value matches
+        scope.$apply('step = 5');
+        expect(inputElm.val()).toBe('10');
+        expect(inputElm).toBeValid();
+        expect(scope.value).toBe(10);
+        expect(scope.form.alias.$error.step).toBeFalsy();
+
+        // Step changes, value does not match
+        scope.$apply('step = 6');
+        expect(inputElm).toBeInvalid();
+        expect(scope.value).toBeUndefined();
+        expect(inputElm.val()).toBe('10');
+        expect(scope.form.alias.$error.step).toBeTruthy();
+
+        // null = valid
+        scope.$apply('step = null');
+        expect(inputElm).toBeValid();
+        expect(scope.value).toBe(10);
+        expect(inputElm.val()).toBe('10');
+        expect(scope.form.alias.$error.step).toBeFalsy();
+
+        // Step val as string
+        scope.$apply('step = "7"');
+        expect(inputElm).toBeInvalid();
+        expect(scope.value).toBeUndefined();
+        expect(inputElm.val()).toBe('10');
+        expect(scope.form.alias.$error.step).toBeTruthy();
+
+        // unparsable string is ignored
+        scope.$apply('step = "abc"');
+        expect(inputElm).toBeValid();
+        expect(scope.value).toBe(10);
+        expect(inputElm.val()).toBe('10');
+        expect(scope.form.alias.$error.step).toBeFalsy();
+      });
+
+    });
+
   });
 
   describe('email', function() {
