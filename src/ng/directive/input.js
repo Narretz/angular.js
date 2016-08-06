@@ -1610,15 +1610,24 @@ function rangeInputType(scope, element, attr, ctrl, $sniffer, $browser) {
   if (stepAttributeType) {
     ctrl.$validators.step = stepAttributeType === 'step' && supportsRange ?
       function noopStepValidator() {
-        // Since all browsers set the input to a valid value, we don't need to check validity
-        return true;
+        // Currently, only FF implements the spec on step change correctly (i.e. adjusting the
+        // input element value to a valid value). Other browsers have various problems, such as
+        // setting the stepMismatch error instead
+        return !validity.stepMismatch;
       } :
       // ngStep doesn't set the setp attr, so the browser doesn't adjust the input value as setting step would
       function stepValidator(modelValue, viewValue) {
         return ctrl.$isEmpty(viewValue) || isUndefined(stepVal) || viewValue % stepVal === 0;
       };
 
-    // Assign stepVal when the directive is linked. This won't run the validators as the model isn't ready yet
+    if (stepAttributeType === 'step') {
+      // Set the actual element attribute so that the browser can adjust the value based on
+      // the max value, which might be interpolated
+      element.attr('step', attr.step);
+    }
+
+    // This initalizes the step value, so that non-support browsers validate with the correct
+    // values during the initial $render
     stepChange(attr.step);
     attr.$observe('step', stepChange);
   }
@@ -1675,7 +1684,7 @@ function rangeInputType(scope, element, attr, ctrl, $sniffer, $browser) {
     if (isDefined(val) && !isNumber(val)) {
       val = parseFloat(val);
     }
-    stepVal = isNumber(val) && !isNaN(val) ? val : undefined;
+    stepVal = isNumber(val) && !isNaN(val) ? val : 1;
     // ignore changes before model is initialized
     if (isNumber(ctrl.$modelValue) && isNaN(ctrl.$modelValue)) {
       return;
