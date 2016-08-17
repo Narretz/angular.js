@@ -1506,8 +1506,8 @@ function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
 
   if (isDefined(attr.min) || attr.ngMin) {
     var minVal;
-    ctrl.$validators.min = function(value) {
-      return ctrl.$isEmpty(value) || isUndefined(minVal) || value >= minVal;
+    ctrl.$validators.min = function(modelValue, viewValue) {
+      return ctrl.$isEmpty(viewValue) || isUndefined(minVal) || viewValue >= minVal;
     };
 
     attr.$observe('min', function(val) {
@@ -1522,8 +1522,8 @@ function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
 
   if (isDefined(attr.max) || attr.ngMax) {
     var maxVal;
-    ctrl.$validators.max = function(value) {
-      return ctrl.$isEmpty(value) || isUndefined(maxVal) || value <= maxVal;
+    ctrl.$validators.max = function(modelValue, viewValue) {
+      return ctrl.$isEmpty(viewValue) || isUndefined(maxVal) || viewValue <= maxVal;
     };
 
     attr.$observe('max', function(val) {
