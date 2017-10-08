@@ -120,11 +120,15 @@ function createHttpBackend($browser, createXhr, $browserDefer, callbacks, rawDoc
       };
 
       xhr.onerror = requestError;
-      xhr.onabort = requestAborted;
       xhr.ontimeout = requestTimeout;
 
+      // The timeout behavior follows standard XMLHttpRequest logic.
+      // xhr.timeout = ontimeout (numerical timeout or $timeout)
+      // xhr.abort() = onabort (resolving a promise)
+      xhr.onabort = timeout > 0 || (timeout && timeout.$$timeoutId >= 0) ? requestTimeout : requestAborted;
+
       forEach(eventHandlers, function(value, key) {
-          xhr.addEventListener(key, value);
+        xhr.addEventListener(key, value);
       });
 
       forEach(uploadEventHandlers, function(value, key) {
