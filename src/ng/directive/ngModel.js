@@ -828,7 +828,9 @@ NgModelController.prototype = {
    */
   $setViewValue: function(value, trigger) {
     this.$viewValue = value;
-    if (this.$options.getOption('updateOnDefault')) {
+    if (this.$options.getOption('updateOn').indexOf(trigger) > -1 ||
+        this.$options.getOption('updateOnDefault')
+    ) {
       this.$$debounceViewValueCommit(trigger);
     }
   },

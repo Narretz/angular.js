@@ -187,7 +187,7 @@ describe('ngModel', function() {
       });
     });
 
-    describe('view -> model', function() {
+    describe('view -> model (setViewValue)', function() {
 
       it('should set the value to $viewValue', function() {
         ctrl.$setViewValue('some-val');
@@ -438,6 +438,23 @@ describe('ngModel', function() {
         expect(ctrl.$modelValue).toBe('c');
         expect(scope.value).toBe('c');
       }));
+
+
+      it('should run the pipeline if the trigger is included in updateOn and updateOnDefault=false', function() {
+        ctrl.$overrideModelOptions({
+          updateOn: 'blur'
+        });
+
+        expect(ctrl.$options.getOption('updateOnDefault')).toBe(false);
+
+        ctrl.$setViewValue('a');
+
+        expect(ctrl.$modelValue).toBeNaN();
+
+        ctrl.$setViewValue('b', 'blur');
+
+        expect(ctrl.$modelValue).toBe('b');
+      });
     });
 
 
