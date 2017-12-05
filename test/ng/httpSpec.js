@@ -2,6 +2,8 @@
 
 /* global MockXhr: false */
 
+// The http specs run against the mocked httpBackend
+
 describe('$http', function() {
 
   var callback, mockedCookies;

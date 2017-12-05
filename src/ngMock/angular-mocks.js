@@ -2114,7 +2114,11 @@ function MockXhr() {
     return lines.join('\n');
   };
 
-  this.abort = angular.noop;
+  this.abort = function() {
+    if (isFunction(this.onabort)) {
+      this.onabort();
+    }
+  };
 
   // This section simulates the events on a real XHR object (and the upload object)
   // When we are testing $httpBackend (inside the AngularJS project) we make partial use of this
