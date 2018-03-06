@@ -1929,17 +1929,20 @@ describe('$http', function() {
         var onFulfilled = jasmine.createSpy('onFulfilled');
         var onRejected = jasmine.createSpy('onRejected').and.callFake(function(response) {
           expect(response.xhrStatus).toBe('timeout');
-          callback();
         });
 
         $httpBackend.expect('GET', '/some').respond(200);
 
-        $http({method: 'GET', url: '/some', timeout: 10}).then(onFulfilled, onRejected);
+        $http({
+          method: 'GET',
+          url: '/some',
+          timeout: 10
+        }).then(onFulfilled, onRejected);
 
         $timeout.flush(100);
 
         expect(onFulfilled).not.toHaveBeenCalled();
-        expect(callback).toHaveBeenCalled();
+        expect(onRejected).toHaveBeenCalled();
       }));
 
 
@@ -1947,17 +1950,20 @@ describe('$http', function() {
         var onFulfilled = jasmine.createSpy('onFulfilled');
         var onRejected = jasmine.createSpy('onRejected').and.callFake(function(response) {
           expect(response.xhrStatus).toBe('timeout');
-          callback();
         });
 
         $httpBackend.expect('GET', '/some').respond(200);
 
-        $http({method: 'GET', url: '/some', timeout: $timeout(noop, 10)}).then(onFulfilled, onRejected);
+        $http({
+          method: 'GET',
+          url: '/some',
+          timeout: $timeout(noop, 10)
+        }).then(onFulfilled, onRejected);
 
         $timeout.flush(100);
 
         expect(onFulfilled).not.toHaveBeenCalled();
-        expect(callback).toHaveBeenCalled();
+        expect(onRejected).toHaveBeenCalled();
       }));
     });
 

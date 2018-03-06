@@ -1379,7 +1379,7 @@ function createHttpBackendMock($rootScope, $timeout, $delegate, $browser) {
       if (!$browser && timeout) {
         if (timeout.then) {
           timeout.then(function() {
-            handlePrematureEnd(timeout.$$timeoutId >= 0 ? 'timeout' : 'abort');
+            handlePrematureEnd(angular.isDefined(timeout.$$timeoutId) ? 'timeout' : 'abort');
           });
         } else {
           $timeout(function() {
