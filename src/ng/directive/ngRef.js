@@ -6,14 +6,18 @@
  * @restrict A
  *
  * @description
- * The `ngRef` attribute tells AngularJS to assign the element component controller
- * to the given property in the current scope.
+ * The `ngRef` attribute tells AngularJS to assign the controller of a component (or an element-directive)
+ * to the given property in the current scope. If no controller exists, the jqlite-wrapped DOM
+ * element will be added to the scope.
  *
- * If the component is destroyed `null` is assigned to the property.
+ * If the element with ngRef is destroyed `null` is assigned to the property.
  *
  *
  * @element ANY
- * @param {string} ngRef property name - this must be a valid AngularJS expression identifier
+ * @param {string} ngRef property name - A valid AngularJS expression identifier to which the
+ *                       controller or jqlite-wrapped DOM element will be bound.
+ * @param {string=} ngRefElement void - If specified, ngRef will always bind the jqlite-wrapped
+ *                               DOM-element even if a controller is available.
  *
  *
  * @example
@@ -189,17 +193,24 @@ var ngRefDirective = ['$parse',function($parse) {
       var getter = $parse(tAttrs.ngRef);
       var setter = getter.assign;
 
-      return function(scope, element) {
-        // gets the controller of the current component or the current DOM element
-        var controller = element.data('$' + controllerName + 'Controller');
-        var value = controller || element[0];
-        setter(scope, value);
+      return function(scope, element, attrs) {
+        var refValue = null;
+
+        if ('ngRefElement' in attrs) {
+          refValue = element;
+        } else {
+          // gets the controller of the current component or the current DOM element
+          var controller = element.data('$' + controllerName + 'Controller');
+          refValue = controller || element;
+        }
+
+        setter(scope, refValue);
 
         // when the element is removed, remove it (nullify it)
         element.on('$destroy', function() {
           // only remove it if value has not changed,
           // carefully because animations (and other procedures) may duplicate elements
-          if (getter(scope) === value) {
+          if (getter(scope) === refValue) {
             setter(scope,  null);
           }
         });
