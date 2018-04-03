@@ -181,28 +181,47 @@
  * </example>
  *
  */
+
+var ngRefMinErr = minErr('ngRef');
+
 var ngRefDirective = ['$parse',function($parse) {
   return {
     priority: -1,
     restrict: 'A',
     compile: function(tElement, tAttrs) {
-      // gets the expected controller name, converts <data-some-thing> into "someThing"
+      // Get the expected controller name, converts <data-some-thing> into "someThing"
       var controllerName = directiveNormalize(nodeName_(tElement));
 
-      // get the expression for value binding
+      // Get the expression for value binding
       var getter = $parse(tAttrs.ngRef);
-      var setter = getter.assign;
+      var setter = getter.assign || function() {
+        throw ngRefMinErr('nonassign', 'Expression in ngRef="{0}" is non-assignable!', tAttrs.ngRef);
+      };
 
       return function(scope, element, attrs) {
-        var refValue = null;
+        var refValue;
+        var controller;
 
-        if ('ngRefElement' in attrs) {
-          refValue = element;
+        if ('ngRefRead' in attrs) {
+          if (attrs.ngRefRead === '$element') {
+            refValue = element;
+          } else {
+            controller = element.data('$' + attrs.ngRefRead + 'Controller');
+            if (!controller) {
+              throw ngRefMinErr(
+                'noctrl',
+                'The controller for ngRefRead="{0}" could not be found on ngRef="{1}"',
+                attrs.ngRefRead,
+                tAttrs.ngRef
+              );
+            }
+
+          }
         } else {
-          // gets the controller of the current component or the current DOM element
-          var controller = element.data('$' + controllerName + 'Controller');
-          refValue = controller || element;
+          controller = element.data('$' + controllerName + 'Controller');
         }
+
+        refValue = refValue || controller || element;
 
         setter(scope, refValue);
 

@@ -2,7 +2,7 @@
 
 describe('ngRef', function() {
 
-  describe('given a component', function() {
+  describe('on a component', function() {
 
     var myComponentController, $rootScope, $compile;
 
@@ -10,27 +10,15 @@ describe('ngRef', function() {
       $compileProvider.component('myComponent', {
         template: 'foo',
         controller: function() {
+          console.log('ctrl');
           myComponentController = this;
         }
       });
     }));
 
-    beforeEach(module(function($exceptionHandlerProvider) {
-      $exceptionHandlerProvider.mode('log');
-    }));
-
     beforeEach(inject(function(_$compile_, _$rootScope_) {
       $rootScope = _$rootScope_;
       $compile = _$compile_;
-    }));
-
-    afterEach(inject(function($exceptionHandler) {
-      if ($exceptionHandler.errors.length) {
-        dump(jasmine.getEnv().currentSpec.getFullName());
-        dump('$exceptionHandler has errors');
-        dump($exceptionHandler.errors);
-        expect($exceptionHandler.errors).toBe([]);
-      }
     }));
 
     it('should bind in the current scope the controller of a component', function() {
@@ -39,6 +27,12 @@ describe('ngRef', function() {
       $compile('<my-component ng-ref="myComponent"></my-component>')($rootScope);
       expect($rootScope.$ctrl).toBe('undamaged');
       expect($rootScope.myComponent).toBe(myComponentController);
+    });
+
+    it('should throw if the expression is not assignable', function() {
+      expect(function() {
+        $compile('<my-component ng-ref="\'hello\'"></my-component>')($rootScope);
+      }).toThrowMinErr('ngRef', 'nonassign', 'Expression in ngRef="\'hello\'" is non-assignable!');
     });
 
     it('should work with non:normalized entity name', function() {
@@ -114,15 +108,6 @@ describe('ngRef', function() {
       expect($rootScope.$ctrl.myComponent).toBe(myComponentController);
     });
 
-    it('should bind the element instead of the controller of a component if ngRefElement is set', function() {
-      $rootScope.$ctrl = 'undamaged';
-
-      var el = $compile('<my-component ng-ref="myEl" ng-ref-element></my-component>')($rootScope);
-      expect($rootScope.$ctrl).toBe('undamaged');
-      expect($rootScope.myEl).toEqual(el);
-      expect($rootScope.myEl[0].textContent).toBe('foo');
-    });
-
   });
 
   it('should bind the jqlite wrapped DOM element if there is no component', inject(function($compile, $rootScope) {
@@ -158,28 +143,112 @@ describe('ngRef', function() {
     });
   });
 
+  describe('ngRefRead', function() {
 
-  it('should bind the element instead an element-directive controller if ngRefElement is set', function() {
-    var myDirectiveController;
+    it('should bind the element instead of the controller of a component if ngRefRead="$element" is set', function() {
 
-    module(function($compileProvider) {
-      $compileProvider.directive('myDirective', function() {
-        return {
-          restrict: 'E',
+      module(function($compileProvider) {
+
+        $compileProvider.component('myComponent', {
           template: 'my text',
-          controller: function() {
-            myDirectiveController = this;
-          }
-        };
+          controller: function() {}
+        });
+      });
+
+      inject(function($compile, $rootScope) {
+
+        var el = $compile('<my-component ng-ref="myEl" ng-ref-read="$element"></my-component>')($rootScope);
+        expect($rootScope.myEl).toEqual(el);
+        expect($rootScope.myEl[0].textContent).toBe('my text');
       });
     });
 
-    inject(function($compile, $rootScope) {
-      var el = $compile('<my-directive ng-ref="myEl" ng-ref-element></my-directive>')($rootScope);
 
-      expect($rootScope.myEl).toEqual(el);
-      expect($rootScope.myEl[0].textContent).toBe('my text');
+    it('should bind the element instead an element-directive controller if ngRefRead="$element" is set', function() {
+
+      module(function($compileProvider) {
+        $compileProvider.directive('myDirective', function() {
+          return {
+            restrict: 'E',
+            template: 'my text',
+            controller: function() {}
+          };
+        });
+      });
+
+      inject(function($compile, $rootScope) {
+        var el = $compile('<my-directive ng-ref="myEl" ng-ref-read="$element"></my-directive>')($rootScope);
+
+        expect($rootScope.myEl).toEqual(el);
+        expect($rootScope.myEl[0].textContent).toBe('my text');
+      });
     });
+
+
+    it('should bind an attribute-directive controller if ngRefRead="controllerName" is set', function() {
+      var attrDirective2Controller;
+
+      module(function($compileProvider) {
+        $compileProvider.directive('elementDirective', function() {
+          return {
+            restrict: 'E',
+            template: 'my text',
+            controller: function() {}
+          };
+        });
+
+        $compileProvider.directive('attributeDirective1', function() {
+          return {
+            restrict: 'A',
+            controller: function() {
+              attrDirective2Controller = this;
+            }
+          };
+        });
+
+        $compileProvider.directive('attributeDirective2', function() {
+          return {
+            restrict: 'A',
+            controller: function() {}
+          };
+        });
+
+      });
+
+      inject(function($compile, $rootScope) {
+        var el = $compile('<element-directive' +
+          'attribute-directive-1' +
+          'attribute-directive-2' +
+          'ng-ref="myController"' +
+          'ng-ref-read="$element"></element-directive>')($rootScope);
+
+        expect($rootScope.myController).toBe(attrDirective2Controller);
+      });
+    });
+
+    it('should throw if no controller is found for the ngRefRead value', function() {
+
+      module(function($compileProvider) {
+        $compileProvider.directive('elementDirective', function() {
+          return {
+            restrict: 'E',
+            template: 'my text',
+            controller: function() {}
+          };
+        });
+      });
+
+      inject(function($compile, $rootScope) {
+
+        expect(function() {
+            $compile('<element-directive ' +
+              'ng-ref="myController"' +
+              'ng-ref-read="attribute"></element-directive>')($rootScope);
+        }).toThrowMinErr('ngRef', 'noctrl', 'The controller for ngRefRead="attribute" could not be found on ngRef="myController"');
+
+      });
+    });
+
   });
 
 
