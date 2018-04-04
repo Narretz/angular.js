@@ -10,14 +10,16 @@
  * to the given property in the current scope. If no controller exists, the jqlite-wrapped DOM
  * element will be added to the scope.
  *
- * If the element with ngRef is destroyed `null` is assigned to the property.
+ * If the element with `ngRef` is destroyed `null` is assigned to the property.
  *
  *
  * @element ANY
  * @param {string} ngRef property name - A valid AngularJS expression identifier to which the
  *                       controller or jqlite-wrapped DOM element will be bound.
- * @param {string=} ngRefElement void - If specified, ngRef will always bind the jqlite-wrapped
- *                               DOM-element even if a controller is available.
+ * @param {string=} ngRefRead read value - The name of a directive (or component) on this element,
+ *                            or the special string `$element`. If a name is provided, `ngRef` will
+ *                            assign the matching controller. If `$element` is provided, the element
+ *                            itself is assigned (even if a controller is available).
  *
  *
  * @example
@@ -33,17 +35,13 @@
  *     </div>
  *   </file>
  *   <file name="index.js">
- *     angular.module('myApp', []);
- *   </file>
- *   <file name="toggle.js">
- *     function ToggleController() {
- *       var opened = false;
- *       this.isOpen = function() { return opened; };
- *       this.toggle = function() { opened = !opened; };
- *     }
- *
- *     angular.module('myApp').component('myToggle', {
- *       controller: ToggleController
+ *     angular.module('myApp', [])
+ *     .component('myToggle', {
+ *       controller: function ToggleController() {
+ *         var opened = false;
+ *         this.isOpen = function() { return opened; };
+ *         this.toggle = function() { opened = !opened; };
+ *       }
  *     });
  *   </file>
  *   <file name="protractor.js" type="protractor">
@@ -58,7 +56,7 @@
  *
  * @example
  * ### ngRef inside scopes
- * This example shows how new scopes limits
+ * This example shows how scopes contain `ngRef` assignments.
  * <example name="ng-ref-scopes" module="myApp">
  *   <file name="index.html">
  *     <h3>Outer Toggle</h3>
@@ -73,7 +71,7 @@
  *        <div>outerToggle.isOpen(): {{outerToggle.isOpen() | json}}</div>
  *     </li>
  *     </ul>
- *     <div>ngRepeat.isOpen(): {{ngRepeatToggle.isOpen() | json}}</div>
+ *     <div>ngRepeatToggle.isOpen(): {{ngRepeatToggle.isOpen() | json}}</div>
  *
  *     <h3>ngIf toggle</h3>
  *     <div ng-if="true">
@@ -81,22 +79,18 @@
  *        <div>ngIfToggle.isOpen(): {{ngIfToggle.isOpen() | json}}</div>
  *        <div>outerToggle.isOpen(): {{outerToggle.isOpen() | json}}</div>
  *     </div>
- *     <div>ngIf.isOpen(): {{ngIf.isOpen() | json}}</div>
+ *     <div>ngIfToggle.isOpen(): {{ngIfToggle.isOpen() | json}}</div>
  *   </file>
  *   <file name="index.js">
- *     angular.module('myApp', []);
- *   </file>
- *   <file name="toggle.js">
- *     function ToggleController() {
- *       var opened = false;
- *       this.isOpen = function() { return opened; };
- *       this.toggle = function() { opened = !opened; };
- *     }
- *
- *     angular.module('myApp').component('myToggle', {
+ *     angular.module('myApp', [])
+ *     .component('myToggle', {
  *       template: '<button ng-click="$ctrl.toggle()" ng-transclude></button>',
  *       transclude: true,
- *       controller: ToggleController
+ *       controller: function ToggleController() {
+ *         var opened = false;
+ *         this.isOpen = function() { return opened; };
+ *         this.toggle = function() { opened = !opened; };
+ *       }
  *     });
  *   </file>
  *   <file name="protractor.js" type="protractor">
@@ -184,7 +178,7 @@
 
 var ngRefMinErr = minErr('ngRef');
 
-var ngRefDirective = ['$parse',function($parse) {
+var ngRefDirective = ['$parse', function($parse) {
   return {
     priority: -1,
     restrict: 'A',
@@ -230,7 +224,7 @@ var ngRefDirective = ['$parse',function($parse) {
           // only remove it if value has not changed,
           // carefully because animations (and other procedures) may duplicate elements
           if (getter(scope) === refValue) {
-            setter(scope,  null);
+            setter(scope, null);
           }
         });
       };
