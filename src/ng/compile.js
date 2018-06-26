@@ -1586,6 +1586,84 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     return cssClassDirectivesEnabledConfig;
   };
 
+
+  /**
+   * The security context of DOM Properties.
+   * @private
+   */
+  var PROP_CONTEXTS = Object.create(null);
+
+  /**
+   * @ngdoc method
+   * @name $compileProvider#addPropertyContext
+   * @description
+   *
+   * Defines the security context for HTML properties bound by ng-prop-*
+   * 
+   * @param {string} the context type
+   * @param {string} the element name or '*' to match any element
+   * @param {string} the property name
+   */
+  this.addPropertyContext = function(ctx, elementName, propertyName) {
+    PROP_CONTEXTS[(elementName.toLowerCase() + '|' + propertyName.toLowerCase())] = ctx;
+  };
+
+  /* Default property contexts.
+   *
+   * Copy of https://github.com/angular/angular/blob/6.0.6/packages/compiler/src/schema/dom_security_schema.ts#L31-L58
+   * Changing:
+   * - SecurityContext.* => $sce.*
+   * - STYLE => CSS
+   * - various URL => MEDIA_URL
+   */
+  (function setupPropertyContexts() {
+    function registerContext(ctx, values) {
+      forEach(values, function(v) { PROP_CONTEXTS[v.toLowerCase()] = ctx; });
+    }
+
+    registerContext(SCE_CONTEXTS.HTML, [
+      'iframe|srcdoc',
+      '*|innerHTML',
+      '*|outerHTML',
+    ]);
+    registerContext(SCE_CONTEXTS.CSS, ['*|style']);
+    registerContext(SCE_CONTEXTS.URL, [
+      '*|formAction',
+      'area|href',       'area|ping',
+      'a|href',          'a|ping',
+      'blockquote|cite',
+      'body|background',
+      'del|cite',
+      'form|action',
+      'input|src',
+      'ins|cite',
+      'q|cite',
+      'script|src',
+      'video|poster'
+    ]);
+    registerContext(SCE_CONTEXTS.MEDIA_URL, [
+      'audio|src',
+      'img|src',    'img|srcset',
+      'source|src', 'source|srcset',
+      'track|src',
+      'video|src'
+    ]);
+    registerContext(SCE_CONTEXTS.RESOURCE_URL, [
+      'applet|code',      'applet|codebase',
+      'base|href',
+      'embed|src',
+      'frame|src',
+      'head|profile',
+      'html|manifest',
+      'iframe|src',
+      'link|href',
+      'media|src',
+      'object|codebase',  'object|data',
+      'script|src',
+    ]);
+  })();
+
+
   this.$get = [
             '$injector', '$interpolate', '$exceptionHandler', '$templateRequest', '$parse',
             '$controller', '$rootScope', '$sce', '$animate',
@@ -1631,12 +1709,12 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
 
 
-    function sanitizeSrcset(value) {
+    function sanitizeSrcset(value, invokeType) {
       if (!value) {
         return value;
       }
       if (!isString(value)) {
-        throw $compileMinErr('srcset', 'Can\'t pass trusted values to `$set(\'srcset\', value)`: "{0}"', value.toString());
+        throw $compileMinErr('srcset', 'Can\'t pass trusted values to `' + invokeType + '`: "{0}"', value.toString());
       }
 
       // Such values are a bit too complex to handle automatically inside $sce.
@@ -1819,7 +1897,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
         // Sanitize img[srcset] + source[srcset] values.
         if ((nodeName === 'img' || nodeName === 'source') && key === 'srcset') {
-          this[key] = value = sanitizeSrcset(value);
+          this[key] = value = sanitizeSrcset(value, '$set(\'srcset\', value)');
         }
 
         if (writeAttr !== false) {
@@ -1916,7 +1994,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
             : function denormalizeTemplate(template) {
               return template.replace(/\{\{/g, startSymbol).replace(/}}/g, endSymbol);
         },
-        NG_ATTR_BINDING = /^ngAttr[A-Z]/;
+        NG_PREFIX_BINDING = /^ng(Attr|Prop|On)([A-Z].*)$/;
     var MULTI_ELEMENT_DIR_RE = /^(.+)Start$/;
 
     compile.$$addBindingInfo = debugInfoEnabled ? function $$addBindingInfo($element, binding) {
@@ -2252,27 +2330,32 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
               directiveNormalize(nodeName), 'E', maxPriority, ignoreDirective);
 
           // iterate over the attributes
-          for (var attr, name, nName, ngAttrName, value, isNgAttr, nAttrs = node.attributes,
+          for (var attr, name, nName, ngAttrName, value, ngPrefixMatch, nAttrs = node.attributes,
                    j = 0, jj = nAttrs && nAttrs.length; j < jj; j++) {
             var attrStartName = false;
             var attrEndName = false;
+
+            var isNgAttr = false, isNgProp = false, isNgEvent = false;
+            var multiElementMatch;
 
             attr = nAttrs[j];
             name = attr.name;
             value = attr.value;
 
-            // support ngAttr attribute binding
+            // support ng-attr-*, ng-prop-* and ng-on-*
             ngAttrName = directiveNormalize(name);
-            isNgAttr = NG_ATTR_BINDING.test(ngAttrName);
-            if (isNgAttr) {
+            if (ngPrefixMatch = ngAttrName.match(NG_PREFIX_BINDING)) {
+              isNgAttr = ngPrefixMatch[1] === "Attr";
+              isNgProp = ngPrefixMatch[1] === "Prop";
+              isNgEvent = ngPrefixMatch[1] === "On";
+
               name = name.replace(PREFIX_REGEXP, '')
-                .substr(8).replace(/_(.)/g, function(match, letter) {
+                .substr(4 + ngPrefixMatch[1].length).replace(/_(.)/g, function(match, letter) {
                   return letter.toUpperCase();
                 });
-            }
 
-            var multiElementMatch = ngAttrName.match(MULTI_ELEMENT_DIR_RE);
-            if (multiElementMatch && directiveIsMultiElement(multiElementMatch[1])) {
+            // support *-start / *-end multi element directives
+            } else if ((multiElementMatch = ngAttrName.match(MULTI_ELEMENT_DIR_RE)) && directiveIsMultiElement(multiElementMatch[1])) {
               attrStartName = name;
               attrEndName = name.substr(0, name.length - 5) + 'end';
               name = name.substr(0, name.length - 6);
@@ -2280,15 +2363,25 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
             nName = directiveNormalize(name.toLowerCase());
             attrsMap[nName] = name;
-            if (isNgAttr || !attrs.hasOwnProperty(nName)) {
-                attrs[nName] = value;
-                if (getBooleanAttrName(node, nName)) {
-                  attrs[nName] = true; // presence means true
-                }
+
+            if (isNgProp) {
+              attrs[ngAttrName] = value;
+              addPropertyDirective(node, directives, ngAttrName, name);
+            } else if (isNgEvent) {
+              attrs[ngAttrName] = value;
+              addEventDirective(directives, ngAttrName, name);
+            } else {
+              if (isNgAttr || !attrs.hasOwnProperty(nName)) {
+                  attrs[nName] = value;
+                  if (getBooleanAttrName(node, nName)) {
+                    attrs[nName] = true; // presence means true
+                  }
+              }
+
+              addAttrInterpolateDirective(node, directives, value, nName, isNgAttr);
+              addDirective(directives, nName, 'A', maxPriority, ignoreDirective, attrStartName,
+                            attrEndName);
             }
-            addAttrInterpolateDirective(node, directives, value, nName, isNgAttr);
-            addDirective(directives, nName, 'A', maxPriority, ignoreDirective, attrStartName,
-                          attrEndName);
           }
 
           if (nodeName === 'input' && node.getAttribute('type') === 'hidden') {
@@ -3324,7 +3417,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
 
 
-    function getTrustedContext(node, attrNormalizedName) {
+    function getTrustedAttrContext(node, attrNormalizedName) {
       if (attrNormalizedName === 'srcdoc') {
         return $sce.HTML;
       }
@@ -3357,9 +3450,54 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       }
     }
 
+    function getTrustedPropContext(node, propNormalizedName) {
+      var tag = nodeName_(node);
+      var prop = propNormalizedName.toLowerCase();
+      return PROP_CONTEXTS[tag + "|" + prop] || PROP_CONTEXTS["*|" + prop];
+    }
+
+    function addPropertyDirective(node, directives, attrName, propName) {
+      if (EVENT_HANDLER_ATTR_REGEXP.test(propName)) {
+        throw $compileMinErr('nodomevents',
+            'Property bindings for HTML DOM event properties are disallowed.  Please use the ' +
+                'ng- versions (such as ng-click or ng-on-click instead of ng-prop-onclick) instead.');
+      }
+
+      var nodeName = nodeName_(node);
+      var trustedContext = getTrustedPropContext(node, propName);
+
+      directives.push({
+        priority: 100,
+        compile: function ngPropCompileFn(_, attr) {
+          var fn = $parse(attr[attrName]);
+          return {
+            pre: function ngPropPreLinkFn(scope, $element) {
+              scope.$watch(fn, function propertyWatchActionFn(value) {
+                if (value) {
+                  // Sanitize img[srcset] + source[srcset] values.
+                  if ((nodeName === 'img' || nodeName === 'source') && propName === 'srcset') {
+                    value = sanitizeSrcset($sce.valueOf(value), 'ng-prop-srcset');
+                  } else if (trustedContext) {
+                    value = $sce.getTrusted(trustedContext, value);
+                  }
+                }
+
+                $element.prop(propName, value);
+              });
+            }
+          };
+        }
+      });
+    }
+
+    function addEventDirective(directives, attrName, eventName) {
+      directives.push(
+        createEventDirective($parse, $rootScope, attrName, eventName, /*forceAsync=*/false)
+      );
+    }
 
     function addAttrInterpolateDirective(node, directives, value, name, isNgAttr) {
-      var trustedContext = getTrustedContext(node, name);
+      var trustedContext = getTrustedAttrContext(node, name);
       var mustHaveExpression = !isNgAttr;
       var allOrNothing = ALL_OR_NOTHING_ATTRS[name] || isNgAttr;
 
@@ -3377,7 +3515,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       if (EVENT_HANDLER_ATTR_REGEXP.test(name)) {
         throw $compileMinErr('nodomevents',
             'Interpolations for HTML DOM event attributes are disallowed.  Please use the ' +
-                'ng- versions (such as ng-click instead of onclick) instead.');
+                'ng- versions (such as ng-click or ng-on-click instead of onclick) instead.');
       }
 
       directives.push({
