@@ -59,7 +59,6 @@ forEach(
 function createEventDirective($parse, $rootScope, attrName, eventName, forceAsync) {
   return {
     restrict: 'A',
-    priority: 0,
     compile: function($element, attr) {
       // NOTE:
       // We expose the powerful `$event` object on the scope that provides access to the Window,

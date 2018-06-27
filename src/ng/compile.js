@@ -1600,9 +1600,9 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    *
    * Defines the security context for HTML properties bound by ng-prop-*
    * 
-   * @param {string} the context type
-   * @param {string} the element name or '*' to match any element
-   * @param {string} the property name
+   * @param {string} ctx the context type
+   * @param {string} elementName the element name or '*' to match any element
+   * @param {string} propertyName the property name
    */
   this.addPropertyContext = function(ctx, elementName, propertyName) {
     PROP_CONTEXTS[(elementName.toLowerCase() + '|' + propertyName.toLowerCase())] = ctx;
