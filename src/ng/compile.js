@@ -3460,6 +3460,9 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       return PROP_CONTEXTS[tag + "|" + prop] || PROP_CONTEXTS["*|" + prop];
     }
 
+    function sanitizeSrcsetPropertyValue(value) {
+      return sanitizeSrcset($sce.valueOf(value), 'ng-prop-srcset');
+    }
     function addPropertyDirective(node, directives, attrName, propName) {
       if (EVENT_HANDLER_ATTR_REGEXP.test(propName)) {
         throw $compileMinErr('nodomevents',
@@ -3470,6 +3473,14 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       var nodeName = nodeName_(node);
       var trustedContext = getTrustedPropContext(nodeName, propName);
 
+      var sanitizer = identity;
+      // Sanitize img[srcset] + source[srcset] values.
+      if ((nodeName === 'img' || nodeName === 'source') && propName === 'srcset') {
+        sanitizer = sanitizeSrcsetPropertyValue;
+      } else if (trustedContext) {
+        sanitizer = $sce.getTrusted.bind($sce, trustedContext);
+      }
+
       directives.push({
         priority: 100,
         compile: function ngPropCompileFn(_, attr) {
@@ -3477,16 +3488,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
           return {
             pre: function ngPropPreLinkFn(scope, $element) {
               scope.$watch(fn, function propertyWatchActionFn(value) {
-                if (value) {
-                  // Sanitize img[srcset] + source[srcset] values.
-                  if ((nodeName === 'img' || nodeName === 'source') && propName === 'srcset') {
-                    value = sanitizeSrcset($sce.valueOf(value), 'ng-prop-srcset');
-                  } else if (trustedContext) {
-                    value = $sce.getTrusted(trustedContext, value);
-                  }
-                }
-
-                $element.prop(propName, value);
+                $element.prop(propName, value && sanitizer(value));
               });
             }
           };
