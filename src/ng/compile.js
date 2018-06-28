@@ -3423,11 +3423,10 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
 
 
-    function getTrustedAttrContext(node, attrNormalizedName) {
+    function getTrustedAttrContext(tag, attrNormalizedName) {
       if (attrNormalizedName === 'srcdoc') {
         return $sce.HTML;
       }
-      var tag = nodeName_(node);
       // All tags with src attributes require a RESOURCE_URL value, except for
       // img and various html5 media tags, which require the MEDIA_URL context.
       if (attrNormalizedName === 'src' || attrNormalizedName === 'ngSrc') {
@@ -3456,8 +3455,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       }
     }
 
-    function getTrustedPropContext(node, propNormalizedName) {
-      var tag = nodeName_(node);
+    function getTrustedPropContext(tag, propNormalizedName) {
       var prop = propNormalizedName.toLowerCase();
       return PROP_CONTEXTS[tag + "|" + prop] || PROP_CONTEXTS["*|" + prop];
     }
@@ -3470,7 +3468,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       }
 
       var nodeName = nodeName_(node);
-      var trustedContext = getTrustedPropContext(node, propName);
+      var trustedContext = getTrustedPropContext(nodeName, propName);
 
       directives.push({
         priority: 100,
@@ -3503,7 +3501,8 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
 
     function addAttrInterpolateDirective(node, directives, value, name, isNgAttr) {
-      var trustedContext = getTrustedAttrContext(node, name);
+      var tag = nodeName_(node);
+      var trustedContext = getTrustedAttrContext(tag, name);
       var mustHaveExpression = !isNgAttr;
       var allOrNothing = ALL_OR_NOTHING_ATTRS[name] || isNgAttr;
 
@@ -3512,7 +3511,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       // no interpolation found -> ignore
       if (!interpolateFn) return;
 
-      if (name === 'multiple' && nodeName_(node) === 'select') {
+      if (name === 'multiple' && tag === 'select') {
         throw $compileMinErr('selmulti',
             'Binding to the \'multiple\' attribute is not supported. Element: {0}',
             startingTag(node));
