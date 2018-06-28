@@ -1605,7 +1605,13 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * @param {string} ctx the context type
    */
   this.addPropertyContext = function(elementName, propertyName, ctx) {
-    PROP_CONTEXTS[(elementName.toLowerCase() + '|' + propertyName.toLowerCase())] = ctx;
+    var key = (elementName.toLowerCase() + '|' + propertyName.toLowerCase());
+
+    if (key in PROP_CONTEXTS && PROP_CONTEXTS[key] !== ctx) {
+      throw $compileMinErr('ctxoverride', 'Property context \'{0}.{1}\' already set to \'{2}\', cannot override to \'{3}\'.', elementName, propertyName, PROP_CONTEXTS[key], ctx);
+    }
+
+    PROP_CONTEXTS[key] = ctx;
   };
 
   /* Default property contexts.

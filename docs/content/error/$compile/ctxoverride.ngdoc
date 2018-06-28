@@ -1,0 +1,13 @@
+@ngdoc error
+@name $compile:ctxoverride
+@fullName Context Override
+@description
+
+This error occurs when the security context for an attribute is defined multiple times under different security contexts.
+
+For example:
+
+```
+$compileProvider.addPropertyContext("my-element", "src", "mediaUrl");
+$compileProvider.addPropertyContext("my-element", "src", "resourceUrl");    //throws
+```
