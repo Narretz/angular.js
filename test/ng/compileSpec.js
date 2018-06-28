@@ -12411,9 +12411,9 @@ describe('$compile', function() {
         element = $compile('<img ng-prop-src="testUrl"></img>')($rootScope);
         // Some browsers complain if you try to write `javascript:` into an `img[src]`
         // So for the test use something different
-        $rootScope.testUrl = $sce.trustAsMediaUrl('someUntrustedThing:foo();');
+        $rootScope.testUrl = $sce.trustAsMediaUrl('someuntrustedthing:foo();');
         $rootScope.$digest();
-        expect(element.prop('src')).toEqual('someUntrustedThing:foo();');
+        expect(element.prop('src')).toEqual('someuntrustedthing:foo();');
       }));
 
       it('should sanitize concatenated values even if they are trusted', inject(function($rootScope, $compile, $sce) {
@@ -12456,7 +12456,6 @@ describe('$compile', function() {
         });
       });
 
-
       it('should use $$sanitizeUri on concatenated trusted values', function() {
         var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri').and.returnValue('someSanitizedUrl');
         module(function($provide) {
@@ -12494,6 +12493,13 @@ describe('$compile', function() {
     describe('img[srcset] sanitization', function() {
       it('should not error if srcset is undefined', inject(function($compile, $rootScope) {
         element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
+        // Set srcset to a value
+        $rootScope.testUrl = 'http://example.com/';
+        $rootScope.$digest();
+        expect(element.prop('srcset')).toBe('http://example.com/');
+
+        // Now set it to undefined
+        $rootScope.testUrl = '';
         $rootScope.$digest();
         expect(element.prop('srcset')).toBe('');
       }));
@@ -12631,7 +12637,7 @@ describe('$compile', function() {
         expect(element.prop('href')).toBe('javascript:doEvilStuff()');
       }));
 
-      it('should not sanitize properties', inject(function($compile, $rootScope) {
+      it('should not sanitize properties other then those configured', inject(function($compile, $rootScope) {
         element = $compile('<a ng-prop-title="testUrl"></a>')($rootScope);
         $rootScope.testUrl = 'javascript:doEvilStuff()';
         $rootScope.$apply();
