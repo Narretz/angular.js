@@ -3,7 +3,7 @@
 @fullName Context Override
 @description
 
-This error occurs when the security context for an attribute is defined multiple times under different security contexts.
+This error occurs when the security context for a property is defined multiple times under different security contexts.
 
 For example:
 

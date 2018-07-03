@@ -1598,11 +1598,12 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * @name $compileProvider#addPropertyContext
    * @description
    *
-   * Defines the security context for HTML properties bound by ng-prop-*
+   * Defines the security context for DOM properties bound by ng-prop-*
    * 
-   * @param {string} elementName the element name or '*' to match any element
-   * @param {string} propertyName the property name
-   * @param {string} ctx the context type
+   * @param {string} elementName The element name or '*' to match any element.
+   * @param {string} propertyName The DOM property name.
+   * @param {string} ctx The context in which this value is safe for use, e.g. $sce.URL,
+   * $sce.RESOURCE_URL, $sce.HTML, $sce.JS or $sce.CSS.
    */
   this.addPropertyContext = function(elementName, propertyName, ctx) {
     var key = (elementName.toLowerCase() + '|' + propertyName.toLowerCase());
@@ -1643,16 +1644,14 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       'form|action',
       'input|src',
       'ins|cite',
-      'q|cite',
-      'script|src',
-      'video|poster'
+      'q|cite'
     ]);
     registerContext(SCE_CONTEXTS.MEDIA_URL, [
       'audio|src',
       'img|src',    'img|srcset',
       'source|src', 'source|srcset',
       'track|src',
-      'video|src'
+      'video|src',  'video|poster'
     ]);
     registerContext(SCE_CONTEXTS.RESOURCE_URL, [
       'applet|code',      'applet|codebase',
@@ -1720,7 +1719,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
         return value;
       }
       if (!isString(value)) {
-        throw $compileMinErr('srcset', 'Can\'t pass trusted values to `' + invokeType + '`: "{0}"', value.toString());
+        throw $compileMinErr('srcset', 'Can\'t pass trusted values to `{0}`: "{1}"', invokeType, value.toString());
       }
 
       // Such values are a bit too complex to handle automatically inside $sce.
@@ -2350,10 +2349,10 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
             // support ng-attr-*, ng-prop-* and ng-on-*
             ngAttrName = directiveNormalize(name);
-            if (ngPrefixMatch = ngAttrName.match(NG_PREFIX_BINDING)) {
-              isNgAttr = ngPrefixMatch[1] === "Attr";
-              isNgProp = ngPrefixMatch[1] === "Prop";
-              isNgEvent = ngPrefixMatch[1] === "On";
+            if ((ngPrefixMatch = ngAttrName.match(NG_PREFIX_BINDING))) {
+              isNgAttr = ngPrefixMatch[1] === 'Attr';
+              isNgProp = ngPrefixMatch[1] === 'Prop';
+              isNgEvent = ngPrefixMatch[1] === 'On';
 
               name = name.replace(PREFIX_REGEXP, '')
                 .substr(4 + ngPrefixMatch[1].length).replace(/_(.)/g, function(match, letter) {
@@ -3455,9 +3454,9 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       }
     }
 
-    function getTrustedPropContext(tag, propNormalizedName) {
+    function getTrustedPropContext(nodeName, propNormalizedName) {
       var prop = propNormalizedName.toLowerCase();
-      return PROP_CONTEXTS[tag + "|" + prop] || PROP_CONTEXTS["*|" + prop];
+      return PROP_CONTEXTS[nodeName + "|" + prop] || PROP_CONTEXTS["*|" + prop];
     }
 
     function sanitizeSrcsetPropertyValue(value) {
@@ -3488,7 +3487,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
           return {
             pre: function ngPropPreLinkFn(scope, $element) {
               scope.$watch(fn, function propertyWatchActionFn(value) {
-                $element.prop(propName, value && sanitizer(value));
+                $element.prop(propName, sanitizer(value));
               });
             }
           };
@@ -3503,8 +3502,8 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
 
     function addAttrInterpolateDirective(node, directives, value, name, isNgAttr) {
-      var tag = nodeName_(node);
-      var trustedContext = getTrustedAttrContext(tag, name);
+      var nodeName = nodeName_(node);
+      var trustedContext = getTrustedAttrContext(nodeName, name);
       var mustHaveExpression = !isNgAttr;
       var allOrNothing = ALL_OR_NOTHING_ATTRS[name] || isNgAttr;
 
@@ -3513,7 +3512,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       // no interpolation found -> ignore
       if (!interpolateFn) return;
 
-      if (name === 'multiple' && tag === 'select') {
+      if (name === 'multiple' && nodeName === 'select') {
         throw $compileMinErr('selmulti',
             'Binding to the \'multiple\' attribute is not supported. Element: {0}',
             startingTag(node));
