@@ -12416,30 +12416,6 @@ describe('$compile', function() {
         expect(element.prop('src')).toEqual('someuntrustedthing:foo();');
       }));
 
-      it('should sanitize concatenated values even if they are trusted', inject(function($rootScope, $compile, $sce) {
-        element = $compile('<img ng-prop-src="testUrl + \'ponies\'"></img>')($rootScope);
-        $rootScope.testUrl = $sce.trustAsUrl('untrusted:foo();');
-        $rootScope.$digest();
-        expect(element.prop('src')).toEqual('unsafe:untrusted:foo();ponies');
-
-        element = $compile('<img ng-prop-src="\'http://\' + testUrl2"></img>')($rootScope);
-        $rootScope.testUrl2 = $sce.trustAsUrl('xyz;');
-        $rootScope.$digest();
-        expect(element.prop('src')).toEqual('http://xyz%3B/');
-
-        element = $compile('<img ng-prop-src="testUrl3 + testUrl3"></img>')($rootScope);
-        $rootScope.testUrl3 = $sce.trustAsUrl('untrusted:foo();');
-        $rootScope.$digest();
-        expect(element.prop('src')).toEqual('unsafe:untrusted:foo();untrusted:foo();');
-      }));
-
-      it('should not sanitize other properties', inject(function($compile, $rootScope) {
-        element = $compile('<img ng-prop-title="testUrl"></img>')($rootScope);
-        $rootScope.testUrl = 'javascript:doEvilStuff()';
-        $rootScope.$apply();
-        expect(element.prop('title')).toBe('javascript:doEvilStuff()');
-      }));
-
       it('should use $$sanitizeUri', function() {
         var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri');
         module(function($provide) {
@@ -12453,24 +12429,6 @@ describe('$compile', function() {
           $rootScope.$apply();
           expect(element.prop('src')).toMatch(/^http:\/\/.*\/someSanitizedUrl$/);
           expect($$sanitizeUri).toHaveBeenCalledWith($rootScope.testUrl, true);
-        });
-      });
-
-      it('should use $$sanitizeUri on concatenated trusted values', function() {
-        var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri').and.returnValue('someSanitizedUrl');
-        module(function($provide) {
-          $provide.value('$$sanitizeUri', $$sanitizeUri);
-        });
-        inject(function($compile, $rootScope, $sce) {
-          element = $compile('<img ng-prop-src="testUrl + \'ponies\'"></img>')($rootScope);
-          $rootScope.testUrl = $sce.trustAsUrl('javascript:foo();');
-          $rootScope.$digest();
-          expect(element.prop('src')).toMatch(/^http:\/\/.*\/someSanitizedUrl$/);
-
-          element = $compile('<img ng-prop-src="\'http://\' + testUrl"></img>')($rootScope);
-          $rootScope.testUrl = $sce.trustAsUrl('xyz');
-          $rootScope.$digest();
-          expect(element.prop('src')).toMatch(/^http:\/\/.*\/someSanitizedUrl$/);
         });
       });
 
@@ -12558,7 +12516,7 @@ describe('$compile', function() {
       });
 
       it('should sanitize all uris in srcset', inject(function($rootScope, $compile) {
-        element = $compile('<img srcset="{{testUrl}}"></img>')($rootScope);
+        element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
         var testSet = {
           'http://example.com/image.png':'http://example.com/image.png',
           ' http://example.com/image.png':'http://example.com/image.png',
