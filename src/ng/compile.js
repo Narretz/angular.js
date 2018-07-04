@@ -1595,7 +1595,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
   /**
    * @ngdoc method
-   * @name $compileProvider#addPropertyContext
+   * @name $compileProvider#addPropertySecurityContext
    * @description
    *
    * Defines the security context for DOM properties bound by ng-prop-*
@@ -1605,7 +1605,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * @param {string} ctx The context in which this value is safe for use, e.g. $sce.URL,
    * $sce.RESOURCE_URL, $sce.HTML, $sce.JS or $sce.CSS.
    */
-  this.addPropertyContext = function(elementName, propertyName, ctx) {
+  this.addPropertySecurityContext = function(elementName, propertyName, ctx) {
     var key = (elementName.toLowerCase() + '|' + propertyName.toLowerCase());
 
     if (key in PROP_CONTEXTS && PROP_CONTEXTS[key] !== ctx) {
@@ -1623,7 +1623,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * - STYLE => CSS
    * - various URL => MEDIA_URL
    */
-  (function setupPropertyContexts() {
+  (function registerNativePropertyContexts() {
     function registerContext(ctx, values) {
       forEach(values, function(v) { PROP_CONTEXTS[v.toLowerCase()] = ctx; });
     }

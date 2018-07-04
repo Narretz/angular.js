@@ -12642,7 +12642,7 @@ describe('$compile', function() {
     });
   });
 
-  describe('addPropertyContext', function() {
+  describe('addPropertySecurityContext', function() {
     function testProvider(provider) {
       module(provider);
       inject(function($compile) { /* done! */});
@@ -12650,26 +12650,26 @@ describe('$compile', function() {
 
     it('should allow adding new properties', function() {
       testProvider(function($compileProvider) {
-        $compileProvider.addPropertyContext('div', 'title', 'mediaUrl');
-        $compileProvider.addPropertyContext('*', 'my-prop', 'resourceUrl');
+        $compileProvider.addPropertySecurityContext('div', 'title', 'mediaUrl');
+        $compileProvider.addPropertySecurityContext('*', 'my-prop', 'resourceUrl');
       });
     });
 
     it('should allow different sce types of a property on different element types', function() {
       testProvider(function($compileProvider) {
-        $compileProvider.addPropertyContext('div', 'title', 'mediaUrl');
-        $compileProvider.addPropertyContext('span', 'title', 'css');
-        $compileProvider.addPropertyContext('*', 'title', 'resourceUrl');
-        $compileProvider.addPropertyContext('article', 'title', 'html');
+        $compileProvider.addPropertySecurityContext('div', 'title', 'mediaUrl');
+        $compileProvider.addPropertySecurityContext('span', 'title', 'css');
+        $compileProvider.addPropertySecurityContext('*', 'title', 'resourceUrl');
+        $compileProvider.addPropertySecurityContext('article', 'title', 'html');
       });
     });
 
     it('should throw \'ctxoverride\' when changing an existing context', function() {
       testProvider(function($compileProvider) {
-        $compileProvider.addPropertyContext('div', 'title', 'mediaUrl');
+        $compileProvider.addPropertySecurityContext('div', 'title', 'mediaUrl');
 
         expect(function() {
-          $compileProvider.addPropertyContext('div', 'title', 'resourceUrl');
+          $compileProvider.addPropertySecurityContext('div', 'title', 'resourceUrl');
         })
         .toThrowMinErr('$compile', 'ctxoverride', 'Property context \'div.title\' already set to \'mediaUrl\', cannot override to \'resourceUrl\'.');
       });
@@ -12677,8 +12677,8 @@ describe('$compile', function() {
 
     it('should setting the same property/element to the same value', function() {
       testProvider(function($compileProvider) {
-        $compileProvider.addPropertyContext('div', 'title', 'mediaUrl');
-        $compileProvider.addPropertyContext('div', 'title', 'mediaUrl');
+        $compileProvider.addPropertySecurityContext('div', 'title', 'mediaUrl');
+        $compileProvider.addPropertySecurityContext('div', 'title', 'mediaUrl');
       });
     });
   });

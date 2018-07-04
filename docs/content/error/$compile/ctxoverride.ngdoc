@@ -8,6 +8,6 @@ This error occurs when the security context for a property is defined multiple t
 For example:
 
 ```
-$compileProvider.addPropertyContext("my-element", "src", "mediaUrl");
-$compileProvider.addPropertyContext("my-element", "src", "resourceUrl");    //throws
+$compileProvider.addPropertySecurityContext("my-element", "src", "mediaUrl");
+$compileProvider.addPropertySecurityContext("my-element", "src", "resourceUrl");    //throws
 ```
