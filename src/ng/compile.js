@@ -2335,7 +2335,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
               directiveNormalize(nodeName), 'E', maxPriority, ignoreDirective);
 
           // iterate over the attributes
-          for (var attr, name, nName, ngAttrName, value, ngPrefixMatch, nAttrs = node.attributes,
+          for (var attr, name, nName, value, ngPrefixMatch, nAttrs = node.attributes,
                    j = 0, jj = nAttrs && nAttrs.length; j < jj; j++) {
             var attrStartName = false;
             var attrEndName = false;
@@ -2348,8 +2348,8 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
             value = attr.value;
 
             // support ng-attr-*, ng-prop-* and ng-on-*
-            ngAttrName = directiveNormalize(name);
-            if ((ngPrefixMatch = ngAttrName.match(NG_PREFIX_BINDING))) {
+            nName = directiveNormalize(name);
+            if ((ngPrefixMatch = nName.match(NG_PREFIX_BINDING))) {
               isNgAttr = ngPrefixMatch[1] === 'Attr';
               isNgProp = ngPrefixMatch[1] === 'Prop';
               isNgEvent = ngPrefixMatch[1] === 'On';
@@ -2360,27 +2360,31 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
                 });
 
             // support *-start / *-end multi element directives
-            } else if ((multiElementMatch = ngAttrName.match(MULTI_ELEMENT_DIR_RE)) && directiveIsMultiElement(multiElementMatch[1])) {
+            } else if ((multiElementMatch = nName.match(MULTI_ELEMENT_DIR_RE)) && directiveIsMultiElement(multiElementMatch[1])) {
               attrStartName = name;
               attrEndName = name.substr(0, name.length - 5) + 'end';
               name = name.substr(0, name.length - 6);
             }
 
-            nName = directiveNormalize(name.toLowerCase());
-            attrsMap[nName] = name;
+            if (isNgProp || isNgEvent) {
+              attrs[nName] = value;
+              attrsMap[nName] = attr.name;
 
-            if (isNgProp) {
-              attrs[ngAttrName] = value;
-              addPropertyDirective(node, directives, ngAttrName, name);
-            } else if (isNgEvent) {
-              attrs[ngAttrName] = value;
-              addEventDirective(directives, ngAttrName, name);
+              if (isNgProp) {
+                addPropertyDirective(node, directives, nName, name);
+              } else {
+                addEventDirective(directives, nName, name);
+              }
             } else {
+              //Update nName for cases where a prefix was removed
+              nName = directiveNormalize(name.toLowerCase());
+              attrsMap[nName] = name;
+  
               if (isNgAttr || !attrs.hasOwnProperty(nName)) {
-                  attrs[nName] = value;
-                  if (getBooleanAttrName(node, nName)) {
-                    attrs[nName] = true; // presence means true
-                  }
+                attrs[nName] = value;
+                if (getBooleanAttrName(node, nName)) {
+                  attrs[nName] = true; // presence means true
+                }
               }
 
               addAttrInterpolateDirective(node, directives, value, nName, isNgAttr);

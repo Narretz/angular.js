@@ -12026,6 +12026,29 @@ describe('$compile', function() {
       expect(element.attr('test3')).toBe('Misko');
     }));
 
+    it('should use the non-prefixed name in $attr mappings', function() {
+      var attrs;
+      module(function() {
+        directive('attrExposer', valueFn({
+          link: function($scope, $element, $attrs) {
+            attrs = $attrs;
+          }
+        }));
+      });
+      inject(function($compile, $rootScope) {
+        $compile('<div attr-exposer ng-attr-title="12" ng-attr-super-title="34">')($rootScope);
+        $rootScope.$apply();
+        expect(attrs.title).toBe('12');
+        expect(attrs.$attr.title).toBe('title');
+        expect(attrs.ngAttrTitle).toBeUndefined();
+        expect(attrs.$attr.ngAttrTitle).toBeUndefined();
+        expect(attrs.superTitle).toBe('34');
+        expect(attrs.$attr.superTitle).toBe('super-title');
+        expect(attrs.ngAttrSuperTitle).toBeUndefined();
+        expect(attrs.$attr.ngAttrSuperTitle).toBeUndefined();
+      });
+    })
+
     it('should work with the "href" attribute', inject(function() {
       $rootScope.value = 'test';
       element = $compile('<a ng-attr-href="test/{{value}}"></a>')($rootScope);
@@ -12269,6 +12292,43 @@ describe('$compile', function() {
       expect(element.prop('asdf')).toBe(123);
       expect(element.attr('asdf')).toBe('foo');
     }));
+
+    it('should use the full ng-prop-* attribute name in $attr mappings', function() {
+      var attrs;
+      module(function() {
+        directive('attrExposer', valueFn({
+          link: function($scope, $element, $attrs) {
+            attrs = $attrs;
+          }
+        }));
+      });
+      inject(function($compile, $rootScope) {
+        $compile('<div attr-exposer ng-prop-title="42">')($rootScope);
+        $rootScope.$apply();
+        expect(attrs.title).toBeUndefined();
+        expect(attrs.$attr.title).toBeUndefined();
+        expect(attrs.ngPropTitle).toBe('42');
+        expect(attrs.$attr.ngPropTitle).toBe('ng-prop-title');
+      });
+    });
+
+    it('should not conflict with (ng-attr-)attribute mappings of the same name', function() {
+      var attrs;
+      module(function() {
+        directive('attrExposer', valueFn({
+          link: function($scope, $element, $attrs) {
+            attrs = $attrs;
+          }
+        }));
+      });
+      inject(function($compile, $rootScope) {
+        $compile('<div attr-exposer ng-prop-title="42" ng-attr-title="foo" title="bar">')($rootScope);
+        $rootScope.$apply();
+        expect(attrs.title).toBe('foo');
+        expect(attrs.$attr.title).toBe('title');
+        expect(attrs.$attr.ngPropTitle).toBe("ng-prop-title");
+      });
+    });
 
     it('should disallow property binding on onclick', inject(function($compile, $rootScope) {
       // All event prop bindings are disallowed.
