@@ -12036,16 +12036,23 @@ describe('$compile', function() {
         }));
       });
       inject(function($compile, $rootScope) {
-        $compile('<div attr-exposer ng-attr-title="12" ng-attr-super-title="34">')($rootScope);
+        $compile('<div attr-exposer ng-attr-title="12" ng-attr-super-title="34" ng-attr-camel_title="56">')($rootScope);
         $rootScope.$apply();
+
         expect(attrs.title).toBe('12');
         expect(attrs.$attr.title).toBe('title');
         expect(attrs.ngAttrTitle).toBeUndefined();
         expect(attrs.$attr.ngAttrTitle).toBeUndefined();
+
         expect(attrs.superTitle).toBe('34');
         expect(attrs.$attr.superTitle).toBe('super-title');
         expect(attrs.ngAttrSuperTitle).toBeUndefined();
         expect(attrs.$attr.ngAttrSuperTitle).toBeUndefined();
+
+        expect(attrs.cameltitle).toBe('56');
+        expect(attrs.$attr.cameltitle).toBe('camelTitle');
+        expect(attrs.ngAttrCameltitle).toBeUndefined();
+        expect(attrs.$attr.ngAttrCameltitle).toBeUndefined();
       });
     })
 
@@ -12303,12 +12310,23 @@ describe('$compile', function() {
         }));
       });
       inject(function($compile, $rootScope) {
-        $compile('<div attr-exposer ng-prop-title="42">')($rootScope);
+        $compile('<div attr-exposer ng-prop-title="12" ng-prop-super-title="34" ng-prop-camel_title="56">')($rootScope);
         $rootScope.$apply();
+
         expect(attrs.title).toBeUndefined();
         expect(attrs.$attr.title).toBeUndefined();
-        expect(attrs.ngPropTitle).toBe('42');
+        expect(attrs.ngPropTitle).toBe('12');
         expect(attrs.$attr.ngPropTitle).toBe('ng-prop-title');
+
+        expect(attrs.superTitle).toBeUndefined();
+        expect(attrs.$attr.superTitle).toBeUndefined();
+        expect(attrs.ngPropSuperTitle).toBe('34');
+        expect(attrs.$attr.ngPropSuperTitle).toBe('ng-prop-super-title');
+
+        expect(attrs.camelTitle).toBeUndefined();
+        expect(attrs.$attr.camelTitle).toBeUndefined();
+        expect(attrs.ngPropCamelTitle).toBe('56');
+        expect(attrs.$attr.ngPropCamelTitle).toBe('ng-prop-camel_title');
       });
     });
 
