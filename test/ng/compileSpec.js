@@ -12036,7 +12036,7 @@ describe('$compile', function() {
         }));
       });
       inject(function($compile, $rootScope) {
-        $compile('<div attr-exposer ng-attr-title="12" ng-attr-super-title="34" ng-attr-camel_title="56">')($rootScope);
+        $compile('<div attr-exposer ng-attr-title="12" ng-attr-super-title="34" ng-attr-my-camel_title="56">')($rootScope);
         $rootScope.$apply();
 
         expect(attrs.title).toBe('12');
@@ -12049,10 +12049,10 @@ describe('$compile', function() {
         expect(attrs.ngAttrSuperTitle).toBeUndefined();
         expect(attrs.$attr.ngAttrSuperTitle).toBeUndefined();
 
-        expect(attrs.cameltitle).toBe('56');
-        expect(attrs.$attr.cameltitle).toBe('camelTitle');
-        expect(attrs.ngAttrCameltitle).toBeUndefined();
-        expect(attrs.$attr.ngAttrCameltitle).toBeUndefined();
+        expect(attrs.myCameltitle).toBe('56');
+        expect(attrs.$attr.myCameltitle).toBe('my-camelTitle');
+        expect(attrs.ngAttrMyCameltitle).toBeUndefined();
+        expect(attrs.$attr.ngAttrMyCameltitle).toBeUndefined();
       });
     })
 
@@ -12310,7 +12310,7 @@ describe('$compile', function() {
         }));
       });
       inject(function($compile, $rootScope) {
-        $compile('<div attr-exposer ng-prop-title="12" ng-prop-super-title="34" ng-prop-camel_title="56">')($rootScope);
+        $compile('<div attr-exposer ng-prop-title="12" ng-prop-super-title="34" ng-prop-my-camel_title="56">')($rootScope);
         $rootScope.$apply();
 
         expect(attrs.title).toBeUndefined();
@@ -12323,10 +12323,10 @@ describe('$compile', function() {
         expect(attrs.ngPropSuperTitle).toBe('34');
         expect(attrs.$attr.ngPropSuperTitle).toBe('ng-prop-super-title');
 
-        expect(attrs.camelTitle).toBeUndefined();
-        expect(attrs.$attr.camelTitle).toBeUndefined();
-        expect(attrs.ngPropCamelTitle).toBe('56');
-        expect(attrs.$attr.ngPropCamelTitle).toBe('ng-prop-camel_title');
+        expect(attrs.myCamelTitle).toBeUndefined();
+        expect(attrs.$attr.myCamelTitle).toBeUndefined();
+        expect(attrs.ngPropMyCamelTitle).toBe('56');
+        expect(attrs.$attr.ngPropMyCamelTitle).toBe('ng-prop-my-camel_title');
       });
     });
 
