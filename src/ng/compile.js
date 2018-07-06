@@ -3478,7 +3478,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
       var sanitizer = identity;
       // Sanitize img[srcset] + source[srcset] values.
-      if ((nodeName === 'img' || nodeName === 'source') && propName === 'srcset') {
+      if (propName === 'srcset' && (nodeName === 'img' || nodeName === 'source')) {
         sanitizer = sanitizeSrcsetPropertyValue;
       } else if (trustedContext) {
         sanitizer = $sce.getTrusted.bind($sce, trustedContext);
@@ -3525,7 +3525,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       if (EVENT_HANDLER_ATTR_REGEXP.test(name)) {
         throw $compileMinErr('nodomevents',
             'Interpolations for HTML DOM event attributes are disallowed.  Please use the ' +
-                'ng- versions (such as ng-click or ng-on-click instead of onclick) instead.');
+                'ng- versions (such as ng-click or ng-on-click rather than onclick) instead.');
       }
 
       directives.push({

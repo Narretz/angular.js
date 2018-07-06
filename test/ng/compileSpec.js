@@ -12285,7 +12285,7 @@ describe('$compile', function() {
       expect(element.prop('test6')).toBe('Misko');
     }));
 
-    it('should work indipendently of attributes with the same name', inject(function($rootScope, $compile) {
+    it('should work independently of attributes with the same name', inject(function($rootScope, $compile) {
       element = $compile('<span ng-prop-asdf="asdf" asdf="foo" />')($rootScope);
       $rootScope.asdf = 123;
       $rootScope.$digest();
@@ -12293,7 +12293,7 @@ describe('$compile', function() {
       expect(element.attr('asdf')).toBe('foo');
     }));
 
-    it('should work indipendently of (ng-)attributes with the same name', inject(function($rootScope, $compile) {
+    it('should work independently of (ng-)attributes with the same name', inject(function($rootScope, $compile) {
       element = $compile('<span ng-prop-asdf="asdf" ng-attr-asdf="foo" />')($rootScope);
       $rootScope.asdf = 123;
       $rootScope.$digest();
@@ -12349,7 +12349,7 @@ describe('$compile', function() {
       });
     });
 
-    it('should disallow property binding on onclick', inject(function($compile, $rootScope) {
+    it('should disallow property binding to onclick', inject(function($compile, $rootScope) {
       // All event prop bindings are disallowed.
       $rootScope.onClickJs = function() {};
       expect(function() {
@@ -12364,7 +12364,7 @@ describe('$compile', function() {
           'Please use the ng- versions (such as ng-click or ng-on-click instead of ng-prop-onclick) instead.');
     }));
 
-    it('should process property binding in pre-linking phase at priority 100', function() {
+    it('should process property bindings at $watch time', function() {
       module(function() {
         directive('propLog', function(log) {
           return {
