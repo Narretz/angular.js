@@ -12049,6 +12049,7 @@ describe('$compile', function() {
         expect(attrs.ngAttrSuperTitle).toBeUndefined();
         expect(attrs.$attr.ngAttrSuperTitle).toBeUndefined();
 
+        //Note the casing is incorrect: https://github.com/angular/angular.js/issues/16624
         expect(attrs.myCameltitle).toBe('56');
         expect(attrs.$attr.myCameltitle).toBe('my-camelTitle');
         expect(attrs.ngAttrMyCameltitle).toBeUndefined();
