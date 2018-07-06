@@ -3470,7 +3470,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       if (EVENT_HANDLER_ATTR_REGEXP.test(propName)) {
         throw $compileMinErr('nodomevents',
             'Property bindings for HTML DOM event properties are disallowed.  Please use the ' +
-                'ng- versions (such as ng-click or ng-on-click instead of ng-prop-onclick) instead.');
+                'ng- versions (such as ng-click or ng-on-click rather than ng-prop-onclick) instead.');
       }
 
       var nodeName = nodeName_(node);
