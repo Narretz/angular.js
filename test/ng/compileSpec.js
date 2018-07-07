@@ -12055,7 +12055,7 @@ describe('$compile', function() {
         expect(attrs.ngAttrMyCameltitle).toBeUndefined();
         expect(attrs.$attr.ngAttrMyCameltitle).toBeUndefined();
       });
-    })
+    });
 
     it('should work with the "href" attribute', inject(function() {
       $rootScope.value = 'test';
@@ -12143,19 +12143,19 @@ describe('$compile', function() {
   });
 
   describe('ngOn* event binding', function() {
-    it("should add event listener of specified name", inject(function($compile, $rootScope) {
+    it('should add event listener of specified name', inject(function($compile, $rootScope) {
       $rootScope.name = 'Misko';
       element = $compile('<span ng-on-foo="name = name + 3"></span>')($rootScope);
       element.triggerHandler('foo');
       expect($rootScope.name).toBe('Misko3');
     }));
 
-    it("should use angular.element(x).on() API to add listener", inject(function($compile, $rootScope) {
+    it('should use angular.element(x).on() API to add listener', inject(function($compile, $rootScope) {
       spyOn(angular.element.prototype, "on");
 
       element = $compile('<span ng-on-foo="name = name + 3"></span>')($rootScope);
 
-      expect(angular.element.prototype.on).toHaveBeenCalledWith("foo", jasmine.any(Function));
+      expect(angular.element.prototype.on).toHaveBeenCalledWith('foo', jasmine.any(Function));
     }));
 
     it('should allow access to the $event object', inject(function($rootScope, $compile) {
@@ -12195,7 +12195,7 @@ describe('$compile', function() {
   });
 
 
-  describe("ngProp*", function() {
+  describe('ngProp*', function() {
     it('should bind boolean properties (input disabled)', inject(function($rootScope, $compile) {
       element = $compile('<button ng-prop-disabled="isDisabled">Button</button>')($rootScope);
       $rootScope.$digest();
@@ -12345,7 +12345,7 @@ describe('$compile', function() {
         $rootScope.$apply();
         expect(attrs.title).toBe('foo');
         expect(attrs.$attr.title).toBe('title');
-        expect(attrs.$attr.ngPropTitle).toBe("ng-prop-title");
+        expect(attrs.$attr.ngPropTitle).toBe('ng-prop-title');
       });
     });
 

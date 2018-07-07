@@ -1599,7 +1599,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * @description
    *
    * Defines the security context for DOM properties bound by ng-prop-*
-   * 
+   *
    * @param {string} elementName The element name or '*' to match any element.
    * @param {string} propertyName The DOM property name.
    * @param {string} ctx The context in which this value is safe for use, e.g. $sce.URL,
@@ -1664,7 +1664,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       'link|href',
       'media|src',
       'object|codebase',  'object|data',
-      'script|src',
+      'script|src'
     ]);
   })();
 
@@ -2379,7 +2379,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
               //Update nName for cases where a prefix was removed
               nName = directiveNormalize(name.toLowerCase());
               attrsMap[nName] = name;
-  
+
               if (isNgAttr || !attrs.hasOwnProperty(nName)) {
                 attrs[nName] = value;
                 if (getBooleanAttrName(node, nName)) {
@@ -3460,7 +3460,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
 
     function getTrustedPropContext(nodeName, propNormalizedName) {
       var prop = propNormalizedName.toLowerCase();
-      return PROP_CONTEXTS[nodeName + "|" + prop] || PROP_CONTEXTS["*|" + prop];
+      return PROP_CONTEXTS[nodeName + '|' + prop] || PROP_CONTEXTS['*|' + prop];
     }
 
     function sanitizeSrcsetPropertyValue(value) {
