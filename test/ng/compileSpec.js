@@ -11706,17 +11706,17 @@ describe('$compile', function() {
           $compile('<button onclick="{{onClickJs}}"></script>');
         }).toThrowMinErr(
           '$compile', 'nodomevents', 'Interpolations for HTML DOM event attributes are disallowed.  ' +
-          'Please use the ng- versions (such as ng-click or ng-on-click instead of onclick) instead.');
+          'Please use the ng- versions (such as ng-click or ng-on-click rather than onclick) instead.');
       expect(function() {
           $compile('<button ONCLICK="{{onClickJs}}"></script>');
         }).toThrowMinErr(
           '$compile', 'nodomevents', 'Interpolations for HTML DOM event attributes are disallowed.  ' +
-          'Please use the ng- versions (such as ng-click or ng-on-click instead of onclick) instead.');
+          'Please use the ng- versions (such as ng-click or ng-on-click rather than onclick) instead.');
       expect(function() {
           $compile('<button ng-attr-onclick="{{onClickJs}}"></script>');
         }).toThrowMinErr(
           '$compile', 'nodomevents', 'Interpolations for HTML DOM event attributes are disallowed.  ' +
-          'Please use the ng- versions (such as ng-click or ng-on-click instead of onclick) instead.');
+          'Please use the ng- versions (such as ng-click or ng-on-click rather than onclick) instead.');
     }));
 
     it('should pass through arbitrary values on onXYZ event attributes that contain a hyphen', inject(function($compile, $rootScope) {
@@ -12356,12 +12356,12 @@ describe('$compile', function() {
           $compile('<button ng-prop-onclick="onClickJs"></script>');
         }).toThrowMinErr(
           '$compile', 'nodomevents', 'Property bindings for HTML DOM event properties are disallowed.  ' +
-          'Please use the ng- versions (such as ng-click or ng-on-click instead of ng-prop-onclick) instead.');
+          'Please use the ng- versions (such as ng-click or ng-on-click rather than ng-prop-onclick) instead.');
       expect(function() {
           $compile('<button ng-prop-ONCLICK="onClickJs"></script>');
         }).toThrowMinErr(
           '$compile', 'nodomevents', 'Property bindings for HTML DOM event properties are disallowed.  ' +
-          'Please use the ng- versions (such as ng-click or ng-on-click instead of ng-prop-onclick) instead.');
+          'Please use the ng- versions (such as ng-click or ng-on-click rather than ng-prop-onclick) instead.');
     }));
 
     it('should process property bindings at $watch time', function() {
