@@ -12527,109 +12527,111 @@ describe('$compile', function() {
       });
     });
 
-    describe('img[srcset] sanitization', function() {
-      it('should not error if srcset is undefined', inject(function($compile, $rootScope) {
-        element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
-        // Set srcset to a value
-        $rootScope.testUrl = 'http://example.com/';
-        $rootScope.$digest();
-        expect(element.prop('srcset')).toBe('http://example.com/');
-
-        // Now set it to undefined
-        $rootScope.testUrl = '';
-        $rootScope.$digest();
-        expect(element.prop('srcset')).toBe('');
-      }));
-
-      it('should NOT require trusted values for whitelisted values', inject(function($rootScope, $compile, $sce) {
-        element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
-        $rootScope.testUrl = 'http://example.com/image.png'; // `http` is whitelisted
-        $rootScope.$digest();
-        expect(element.prop('srcset')).toEqual('http://example.com/image.png');
-      }));
-
-      it('should accept trusted values, if they are also whitelisted', inject(function($rootScope, $compile, $sce) {
-        element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
-        $rootScope.testUrl = $sce.trustAsUrl('http://example.com');
-        $rootScope.$digest();
-        expect(element.prop('srcset')).toEqual('http://example.com');
-      }));
-
-      it('does not work with trusted values', inject(function($rootScope, $compile, $sce) {
-        // A limitation of the approach used for srcset is that you cannot use `trustAsUrl`.
-        // Use trustAsHtml and ng-bind-html to work around this.
-        element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
-        $rootScope.testUrl = $sce.trustAsUrl('javascript:something');
-        $rootScope.$digest();
-        expect(element.prop('srcset')).toEqual('unsafe:javascript:something');
-
-        element = $compile('<img ng-prop-srcset="testUrl + \',\' + testUrl"></img>')($rootScope);
-        $rootScope.testUrl = $sce.trustAsUrl('javascript:something');
-        $rootScope.$digest();
-        expect(element.prop('srcset')).toEqual(
-            'unsafe:javascript:something ,unsafe:javascript:something');
-      }));
-
-      it('should use $$sanitizeUri', function() {
-        var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri').and.returnValue('someSanitizedUrl');
-        module(function($provide) {
-          $provide.value('$$sanitizeUri', $$sanitizeUri);
-        });
-        inject(function($compile, $rootScope) {
-          element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
-          $rootScope.testUrl = 'someUrl';
-          $rootScope.$apply();
-          expect(element.prop('srcset')).toBe('someSanitizedUrl');
-          expect($$sanitizeUri).toHaveBeenCalledWith($rootScope.testUrl, true);
-
-          element = $compile('<img ng-prop-srcset="testUrl + \',\' + testUrl"></img>')($rootScope);
-          $rootScope.testUrl = 'javascript:yay';
-          $rootScope.$apply();
-          expect(element.prop('srcset')).toEqual('someSanitizedUrl ,someSanitizedUrl');
-
-          element = $compile('<img ng-prop-srcset="\'java\' + testUrl"></img>')($rootScope);
-          $rootScope.testUrl = 'script:yay, javascript:nay';
-          $rootScope.$apply();
-          expect(element.prop('srcset')).toEqual('someSanitizedUrl ,someSanitizedUrl');
-        });
-      });
-
-      it('should sanitize all uris in srcset', inject(function($rootScope, $compile) {
-        element = $compile('<img ng-prop-srcset="testUrl"></img>')($rootScope);
-        var testSet = {
-          'http://example.com/image.png':'http://example.com/image.png',
-          ' http://example.com/image.png':'http://example.com/image.png',
-          'http://example.com/image.png ':'http://example.com/image.png',
-          'http://example.com/image.png 128w':'http://example.com/image.png 128w',
-          'http://example.com/image.png 2x':'http://example.com/image.png 2x',
-          'http://example.com/image.png 1.5x':'http://example.com/image.png 1.5x',
-          'http://example.com/image1.png 1x,http://example.com/image2.png 2x':'http://example.com/image1.png 1x,http://example.com/image2.png 2x',
-          'http://example.com/image1.png 1x ,http://example.com/image2.png 2x':'http://example.com/image1.png 1x ,http://example.com/image2.png 2x',
-          'http://example.com/image1.png 1x, http://example.com/image2.png 2x':'http://example.com/image1.png 1x,http://example.com/image2.png 2x',
-          'http://example.com/image1.png 1x , http://example.com/image2.png 2x':'http://example.com/image1.png 1x ,http://example.com/image2.png 2x',
-          'http://example.com/image1.png 48w,http://example.com/image2.png 64w':'http://example.com/image1.png 48w,http://example.com/image2.png 64w',
-          //Test regex to make sure doesn't mistake parts of url for width descriptors
-          'http://example.com/image1.png?w=48w,http://example.com/image2.png 64w':'http://example.com/image1.png?w=48w,http://example.com/image2.png 64w',
-          'http://example.com/image1.png 1x,http://example.com/image2.png 64w':'http://example.com/image1.png 1x,http://example.com/image2.png 64w',
-          'http://example.com/image1.png,http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
-          'http://example.com/image1.png ,http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
-          'http://example.com/image1.png, http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
-          'http://example.com/image1.png , http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
-          'http://example.com/image1.png 1x, http://example.com/image2.png 2x, http://example.com/image3.png 3x':
-            'http://example.com/image1.png 1x,http://example.com/image2.png 2x,http://example.com/image3.png 3x',
-          'javascript:doEvilStuff() 2x': 'unsafe:javascript:doEvilStuff() 2x',
-          'http://example.com/image1.png 1x,javascript:doEvilStuff() 2x':'http://example.com/image1.png 1x,unsafe:javascript:doEvilStuff() 2x',
-          'http://example.com/image1.jpg?x=a,b 1x,http://example.com/ima,ge2.jpg 2x':'http://example.com/image1.jpg?x=a,b 1x,http://example.com/ima,ge2.jpg 2x',
-          //Test regex to make sure doesn't mistake parts of url for pixel density descriptors
-          'http://example.com/image1.jpg?x=a2x,b 1x,http://example.com/ima,ge2.jpg 2x':'http://example.com/image1.jpg?x=a2x,b 1x,http://example.com/ima,ge2.jpg 2x'
-        };
-
-        forEach(testSet, function(ref, url) {
-          $rootScope.testUrl = url;
+    ['img', 'source'].forEach(function(srcsetElement) {
+      describe(srcsetElement + '[srcset] sanitization', function() {
+        it('should not error if srcset is undefined', inject(function($compile, $rootScope) {
+          element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
+          // Set srcset to a value
+          $rootScope.testUrl = 'http://example.com/';
           $rootScope.$digest();
-          expect(element.prop('srcset')).toEqual(ref);
+          expect(element.prop('srcset')).toBe('http://example.com/');
+
+          // Now set it to undefined
+          $rootScope.testUrl = '';
+          $rootScope.$digest();
+          expect(element.prop('srcset')).toBe('');
+        }));
+
+        it('should NOT require trusted values for whitelisted values', inject(function($rootScope, $compile, $sce) {
+          element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
+          $rootScope.testUrl = 'http://example.com/image.png'; // `http` is whitelisted
+          $rootScope.$digest();
+          expect(element.prop('srcset')).toEqual('http://example.com/image.png');
+        }));
+
+        it('should accept trusted values, if they are also whitelisted', inject(function($rootScope, $compile, $sce) {
+          element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
+          $rootScope.testUrl = $sce.trustAsUrl('http://example.com');
+          $rootScope.$digest();
+          expect(element.prop('srcset')).toEqual('http://example.com');
+        }));
+
+        it('does not work with trusted values', inject(function($rootScope, $compile, $sce) {
+          // A limitation of the approach used for srcset is that you cannot use `trustAsUrl`.
+          // Use trustAsHtml and ng-bind-html to work around this.
+          element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
+          $rootScope.testUrl = $sce.trustAsUrl('javascript:something');
+          $rootScope.$digest();
+          expect(element.prop('srcset')).toEqual('unsafe:javascript:something');
+
+          element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl + \',\' + testUrl"></' + srcsetElement + '>')($rootScope);
+          $rootScope.testUrl = $sce.trustAsUrl('javascript:something');
+          $rootScope.$digest();
+          expect(element.prop('srcset')).toEqual(
+              'unsafe:javascript:something ,unsafe:javascript:something');
+        }));
+
+        it('should use $$sanitizeUri', function() {
+          var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri').and.returnValue('someSanitizedUrl');
+          module(function($provide) {
+            $provide.value('$$sanitizeUri', $$sanitizeUri);
+          });
+          inject(function($compile, $rootScope) {
+            element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
+            $rootScope.testUrl = 'someUrl';
+            $rootScope.$apply();
+            expect(element.prop('srcset')).toBe('someSanitizedUrl');
+            expect($$sanitizeUri).toHaveBeenCalledWith($rootScope.testUrl, true);
+
+            element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl + \',\' + testUrl"></' + srcsetElement + '>')($rootScope);
+            $rootScope.testUrl = 'javascript:yay';
+            $rootScope.$apply();
+            expect(element.prop('srcset')).toEqual('someSanitizedUrl ,someSanitizedUrl');
+
+            element = $compile('<' + srcsetElement + ' ng-prop-srcset="\'java\' + testUrl"></' + srcsetElement + '>')($rootScope);
+            $rootScope.testUrl = 'script:yay, javascript:nay';
+            $rootScope.$apply();
+            expect(element.prop('srcset')).toEqual('someSanitizedUrl ,someSanitizedUrl');
+          });
         });
-      }));
+
+        it('should sanitize all uris in srcset', inject(function($rootScope, $compile) {
+          element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
+          var testSet = {
+            'http://example.com/image.png':'http://example.com/image.png',
+            ' http://example.com/image.png':'http://example.com/image.png',
+            'http://example.com/image.png ':'http://example.com/image.png',
+            'http://example.com/image.png 128w':'http://example.com/image.png 128w',
+            'http://example.com/image.png 2x':'http://example.com/image.png 2x',
+            'http://example.com/image.png 1.5x':'http://example.com/image.png 1.5x',
+            'http://example.com/image1.png 1x,http://example.com/image2.png 2x':'http://example.com/image1.png 1x,http://example.com/image2.png 2x',
+            'http://example.com/image1.png 1x ,http://example.com/image2.png 2x':'http://example.com/image1.png 1x ,http://example.com/image2.png 2x',
+            'http://example.com/image1.png 1x, http://example.com/image2.png 2x':'http://example.com/image1.png 1x,http://example.com/image2.png 2x',
+            'http://example.com/image1.png 1x , http://example.com/image2.png 2x':'http://example.com/image1.png 1x ,http://example.com/image2.png 2x',
+            'http://example.com/image1.png 48w,http://example.com/image2.png 64w':'http://example.com/image1.png 48w,http://example.com/image2.png 64w',
+            //Test regex to make sure doesn't mistake parts of url for width descriptors
+            'http://example.com/image1.png?w=48w,http://example.com/image2.png 64w':'http://example.com/image1.png?w=48w,http://example.com/image2.png 64w',
+            'http://example.com/image1.png 1x,http://example.com/image2.png 64w':'http://example.com/image1.png 1x,http://example.com/image2.png 64w',
+            'http://example.com/image1.png,http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
+            'http://example.com/image1.png ,http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
+            'http://example.com/image1.png, http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
+            'http://example.com/image1.png , http://example.com/image2.png':'http://example.com/image1.png ,http://example.com/image2.png',
+            'http://example.com/image1.png 1x, http://example.com/image2.png 2x, http://example.com/image3.png 3x':
+              'http://example.com/image1.png 1x,http://example.com/image2.png 2x,http://example.com/image3.png 3x',
+            'javascript:doEvilStuff() 2x': 'unsafe:javascript:doEvilStuff() 2x',
+            'http://example.com/image1.png 1x,javascript:doEvilStuff() 2x':'http://example.com/image1.png 1x,unsafe:javascript:doEvilStuff() 2x',
+            'http://example.com/image1.jpg?x=a,b 1x,http://example.com/ima,ge2.jpg 2x':'http://example.com/image1.jpg?x=a,b 1x,http://example.com/ima,ge2.jpg 2x',
+            //Test regex to make sure doesn't mistake parts of url for pixel density descriptors
+            'http://example.com/image1.jpg?x=a2x,b 1x,http://example.com/ima,ge2.jpg 2x':'http://example.com/image1.jpg?x=a2x,b 1x,http://example.com/ima,ge2.jpg 2x'
+          };
+
+          forEach(testSet, function(ref, url) {
+            $rootScope.testUrl = url;
+            $rootScope.$digest();
+            expect(element.prop('srcset')).toEqual(ref);
+          });
+        }));
+      });
     });
 
     describe('a[href] sanitization', function() {
