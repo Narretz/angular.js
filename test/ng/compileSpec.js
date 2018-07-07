@@ -12719,6 +12719,127 @@ describe('$compile', function() {
         $rootScope.$digest();
       }));
     });
+
+    describe('*[innerHTML]', function() {
+      describe('SCE disabled', function() {
+        beforeEach(function() {
+          module(function($sceProvider) { $sceProvider.enabled(false); });
+        });
+
+        it('should set html', inject(function($rootScope, $compile) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+          $rootScope.html = '<div onclick="">hello</div>';
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('<div onclick="">hello</div>');
+        }));
+
+        it('should update html', inject(function($rootScope, $compile, $sce) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+          $rootScope.html = 'hello';
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('hello');
+          $rootScope.html = 'goodbye';
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('goodbye');
+        }));
+
+        it('should one-time bind if the expression starts with two colons', inject(function($rootScope, $compile) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="::html"></div>')($rootScope);
+          $rootScope.html = '<div onclick="">hello</div>';
+          expect($rootScope.$$watchers.length).toEqual(1);
+          $rootScope.$digest();
+          expect(element.text()).toEqual('hello');
+          expect($rootScope.$$watchers.length).toEqual(0);
+          $rootScope.html = '<div onclick="">hello</div>';
+          $rootScope.$digest();
+          expect(element.text()).toEqual('hello');
+        }));
+      });
+
+
+      describe('SCE enabled', function() {
+        it('should NOT set html for untrusted values', inject(function($rootScope, $compile) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+          $rootScope.html = '<div onclick="">hello</div>';
+          expect(function() { $rootScope.$digest(); }).toThrow();
+        }));
+
+        it('should NOT set html for wrongly typed values', inject(function($rootScope, $compile, $sce) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+          $rootScope.html = $sce.trustAsCss('<div onclick="">hello</div>');
+          expect(function() { $rootScope.$digest(); }).toThrow();
+        }));
+
+        it('should set html for trusted values', inject(function($rootScope, $compile, $sce) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+          $rootScope.html = $sce.trustAsHtml('<div onclick="">hello</div>');
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('<div onclick="">hello</div>');
+        }));
+
+        it('should update html', inject(function($rootScope, $compile, $sce) {
+          element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+          $rootScope.html = $sce.trustAsHtml('hello');
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('hello');
+          $rootScope.html = $sce.trustAsHtml('goodbye');
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('goodbye');
+        }));
+
+        it('should not cause infinite recursion for trustAsHtml object watches',
+            inject(function($rootScope, $compile, $sce) {
+          // Ref: https://github.com/angular/angular.js/issues/3932
+          // If the binding is a function that creates a new value on every call via trustAs, we'll
+          // trigger an infinite digest if we don't take care of it.
+          element = $compile('<div ng-prop-inner_h_t_m_l="getHtml()"></div>')($rootScope);
+          $rootScope.getHtml = function() {
+            return $sce.trustAsHtml('<div onclick="">hello</div>');
+          };
+          $rootScope.$digest();
+          expect(lowercase(element.html())).toEqual('<div onclick="">hello</div>');
+        }));
+
+        it('should handle custom $sce objects', function() {
+          function MySafeHtml(val) { this.val = val; }
+
+          module(function($provide) {
+            $provide.decorator('$sce', function($delegate) {
+              $delegate.trustAsHtml = function(html) { return new MySafeHtml(html); };
+              $delegate.getTrusted = function(type, mySafeHtml) { return mySafeHtml.val; };
+              $delegate.valueOf = function(v) { return v instanceof MySafeHtml ? v.val : v; };
+              return $delegate;
+            });
+          });
+
+          inject(function($rootScope, $compile, $sce) {
+            // Ref: https://github.com/angular/angular.js/issues/14526
+            // Previous code used toString for change detection, which fails for custom objects
+            // that don't override toString.
+            element = $compile('<div ng-prop-inner_h_t_m_l="getHtml()"></div>')($rootScope);
+            var html = 'hello';
+            $rootScope.getHtml = function() { return $sce.trustAsHtml(html); };
+            $rootScope.$digest();
+            expect(lowercase(element.html())).toEqual('hello');
+            html = 'goodbye';
+            $rootScope.$digest();
+            expect(lowercase(element.html())).toEqual('goodbye');
+          });
+        });
+
+        describe('when $sanitize is available', function() {
+          beforeEach(function() { module('ngSanitize'); });
+
+          it('should sanitize untrusted html', inject(function($rootScope, $compile) {
+            element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
+            $rootScope.html = '<div onclick="">hello</div>';
+            $rootScope.$digest();
+            expect(lowercase(element.html())).toEqual('<div>hello</div>');
+          }));
+        });
+      });
+
+    })
   });
 
   describe('addPropertySecurityContext', function() {

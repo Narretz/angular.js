@@ -1619,7 +1619,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    *
    * Copy of https://github.com/angular/angular/blob/6.0.6/packages/compiler/src/schema/dom_security_schema.ts#L31-L58
    * Changing:
-   * - SecurityContext.* => $sce.*
+   * - SecurityContext.* => SCE_CONTEXTS/$sce.*
    * - STYLE => CSS
    * - various URL => MEDIA_URL
    */
@@ -3487,13 +3487,17 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       directives.push({
         priority: 100,
         compile: function ngPropCompileFn(_, attr) {
-          var fn = $parse(attr[attrName]);
-          return {
-            pre: function ngPropPreLinkFn(scope, $element) {
-              scope.$watch(fn, function propertyWatchActionFn(value) {
-                $element.prop(propName, sanitizer(value));
-              });
-            }
+          var ngPropGetter = $parse(attr[attrName]);
+          var ngPropWatch = $parse(attr[attrName], function sceValueOf(val) {
+            // Unwrap the value to compare the actual inner safe value, not the wrapper object.
+            return $sce.valueOf(val);
+          });
+
+          return function ngPropPreLinkFn(scope, $element) {
+            scope.$watch(ngPropWatch, function propertyWatchActionFn() {
+              var value = ngPropGetter(scope);
+              $element.prop(propName, sanitizer(value));
+            });
           };
         }
       });
