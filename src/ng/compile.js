@@ -1622,6 +1622,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * - SecurityContext.* => SCE_CONTEXTS/$sce.*
    * - STYLE => CSS
    * - various URL => MEDIA_URL
+   * - *|formAction, form|action URL => RESOURCE_URL (like the attribute)
    */
   (function registerNativePropertyContexts() {
     function registerContext(ctx, values) {
@@ -1635,13 +1636,11 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     ]);
     registerContext(SCE_CONTEXTS.CSS, ['*|style']);
     registerContext(SCE_CONTEXTS.URL, [
-      '*|formAction',
       'area|href',       'area|ping',
       'a|href',          'a|ping',
       'blockquote|cite',
       'body|background',
       'del|cite',
-      'form|action',
       'input|src',
       'ins|cite',
       'q|cite'
@@ -1654,10 +1653,12 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       'video|src',  'video|poster'
     ]);
     registerContext(SCE_CONTEXTS.RESOURCE_URL, [
+      '*|formAction',
       'applet|code',      'applet|codebase',
       'base|href',
       'embed|src',
       'frame|src',
+      'form|action',
       'head|profile',
       'html|manifest',
       'iframe|src',

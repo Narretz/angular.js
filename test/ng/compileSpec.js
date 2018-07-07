@@ -11739,7 +11739,7 @@ describe('$compile', function() {
     }));
   });
 
-  describe('iframe[src]', function() {
+  describe('iframe[src] attribute', function() {
     it('should pass through src attributes for the same domain', inject(function($compile, $rootScope, $sce) {
       element = $compile('<iframe src="{{testUrl}}"></iframe>')($rootScope);
       $rootScope.testUrl = 'different_page';
@@ -11782,7 +11782,7 @@ describe('$compile', function() {
     }));
   });
 
-  describe('base[href]', function() {
+  describe('base[href] attribute', function() {
     it('should be a RESOURCE_URL context', inject(function($compile, $rootScope, $sce) {
       element = $compile('<base href="{{testUrl}}"/>')($rootScope);
 
@@ -11798,7 +11798,7 @@ describe('$compile', function() {
     }));
   });
 
-  describe('form[action]', function() {
+  describe('form[action] attribute', function() {
     it('should pass through action attribute for the same domain', inject(function($compile, $rootScope, $sce) {
       element = $compile('<form action="{{testUrl}}"></form>')($rootScope);
       $rootScope.testUrl = 'different_page';
@@ -11842,7 +11842,7 @@ describe('$compile', function() {
     }));
   });
 
-  describe('link[href]', function() {
+  describe('link[href] attribute', function() {
     it('should reject invalid RESOURCE_URLs', inject(function($compile, $rootScope) {
       element = $compile('<link href="{{testUrl}}" rel="stylesheet" />')($rootScope);
       $rootScope.testUrl = 'https://evil.example.org/css.css';
@@ -12719,6 +12719,126 @@ describe('$compile', function() {
 
         $rootScope.testUrl = {};
         $rootScope.$digest();
+      }));
+    });
+
+    describe('iframe[src]', function() {
+      it('should pass through src properties for the same domain', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<iframe ng-prop-src="testUrl"></iframe>')($rootScope);
+        $rootScope.testUrl = 'different_page';
+        $rootScope.$apply();
+        expect(element.prop('src')).toMatch(/\/different_page$/);
+      }));
+
+      it('should clear out src properties for a different domain', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<iframe ng-prop-src="testUrl"></iframe>')($rootScope);
+        $rootScope.testUrl = 'http://a.different.domain.example.com';
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: http://a.different.domain.example.com');
+      }));
+
+      it('should clear out JS src properties', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<iframe ng-prop-src="testUrl"></iframe>')($rootScope);
+        $rootScope.testUrl = 'javascript:alert(1);';
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: javascript:alert(1);');
+      }));
+
+      it('should clear out non-resource_url src properties', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<iframe ng-prop-src="testUrl"></iframe>')($rootScope);
+        $rootScope.testUrl = $sce.trustAsUrl('javascript:doTrustedStuff()');
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: javascript:doTrustedStuff()');
+      }));
+
+      it('should pass through $sce.trustAs() values in src properties', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<iframe ng-prop-src="testUrl"></iframe>')($rootScope);
+        $rootScope.testUrl = $sce.trustAsResourceUrl('javascript:doTrustedStuff()');
+        $rootScope.$apply();
+
+        expect(element.prop('src')).toEqual('javascript:doTrustedStuff()');
+      }));
+    });
+
+    describe('base[href]', function() {
+      it('should be a RESOURCE_URL context', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<base ng-prop-href="testUrl"/>')($rootScope);
+
+        $rootScope.testUrl = $sce.trustAsResourceUrl('https://example.com/');
+        $rootScope.$apply();
+        expect(element.prop('href')).toContain('https://example.com/');
+
+        $rootScope.testUrl = 'https://not.example.com/';
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: https://not.example.com/');
+      }));
+    });
+
+    describe('form[action]', function() {
+      it('should pass through action property for the same domain', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<form ng-prop-action="testUrl"></form>')($rootScope);
+        $rootScope.testUrl = 'different_page';
+        $rootScope.$apply();
+        expect(element.prop('action')).toMatch(/\/different_page$/);
+      }));
+
+      it('should clear out action property for a different domain', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<form ng-prop-action="testUrl"></form>')($rootScope);
+        $rootScope.testUrl = 'http://a.different.domain.example.com';
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: http://a.different.domain.example.com');
+      }));
+
+      it('should clear out JS action property', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<form ng-prop-action="testUrl"></form>')($rootScope);
+        $rootScope.testUrl = 'javascript:alert(1);';
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: javascript:alert(1);');
+      }));
+
+      it('should clear out non-resource_url action property', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<form ng-prop-action="testUrl"></form>')($rootScope);
+        $rootScope.testUrl = $sce.trustAsUrl('javascript:doTrustedStuff()');
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: javascript:doTrustedStuff()');
+      }));
+
+
+      it('should pass through $sce.trustAs() values in action property', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<form ng-prop-action="testUrl"></form>')($rootScope);
+        $rootScope.testUrl = $sce.trustAsResourceUrl('javascript:doTrustedStuff()');
+        $rootScope.$apply();
+
+        expect(element.prop('action')).toEqual('javascript:doTrustedStuff()');
+      }));
+    });
+
+    describe('link[href]', function() {
+      it('should reject invalid RESOURCE_URLs', inject(function($compile, $rootScope) {
+        element = $compile('<link ng-prop-href="testUrl" rel="stylesheet" />')($rootScope);
+        $rootScope.testUrl = 'https://evil.example.org/css.css';
+        expect(function() { $rootScope.$apply(); }).toThrowMinErr(
+            '$sce', 'insecurl', 'Blocked loading resource from url not allowed by $sceDelegate policy.' +
+            '  URL: https://evil.example.org/css.css');
+      }));
+
+      it('should accept valid RESOURCE_URLs', inject(function($compile, $rootScope, $sce) {
+        element = $compile('<link ng-prop-href="testUrl" rel="stylesheet" />')($rootScope);
+
+        $rootScope.testUrl = './css1.css';
+        $rootScope.$apply();
+        expect(element.prop('href')).toContain('css1.css');
+
+        $rootScope.testUrl = $sce.trustAsResourceUrl('https://elsewhere.example.org/css2.css');
+        $rootScope.$apply();
+        expect(element.prop('href')).toContain('https://elsewhere.example.org/css2.css');
       }));
     });
 
