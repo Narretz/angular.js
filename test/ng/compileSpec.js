@@ -12151,7 +12151,7 @@ describe('$compile', function() {
     }));
 
     it('should use angular.element(x).on() API to add listener', inject(function($compile, $rootScope) {
-      spyOn(angular.element.prototype, "on");
+      spyOn(angular.element.prototype, 'on');
 
       element = $compile('<span ng-on-foo="name = name + 3"></span>')($rootScope);
 
@@ -12839,7 +12839,7 @@ describe('$compile', function() {
         });
       });
 
-    })
+    });
   });
 
   describe('addPropertySecurityContext', function() {

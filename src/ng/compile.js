@@ -1631,7 +1631,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     registerContext(SCE_CONTEXTS.HTML, [
       'iframe|srcdoc',
       '*|innerHTML',
-      '*|outerHTML',
+      '*|outerHTML'
     ]);
     registerContext(SCE_CONTEXTS.CSS, ['*|style']);
     registerContext(SCE_CONTEXTS.URL, [
