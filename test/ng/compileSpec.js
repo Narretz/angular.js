@@ -12962,6 +12962,27 @@ describe('$compile', function() {
       });
 
     });
+
+    describe('*[style]', function() {
+      it('should NOT set style for untrusted values', inject(function($rootScope, $compile) {
+        element = $compile('<div ng-prop-style="style"></div>')($rootScope);
+        $rootScope.style = 'background: red';
+        expect(function() { $rootScope.$digest(); }).toThrow();
+      }));
+
+      it('should NOT set style for wrongly typed values', inject(function($rootScope, $compile, $sce) {
+        element = $compile('<div ng-prop-style="style"></div>')($rootScope);
+        $rootScope.style = $sce.trustAsHtml('background: red');
+        expect(function() { $rootScope.$digest(); }).toThrow();
+      }));
+
+      it('should set style for trusted values', inject(function($rootScope, $compile, $sce) {
+        element = $compile('<div ng-prop-style="style"></div>')($rootScope);
+        $rootScope.style = $sce.trustAsCss('background: red');
+        $rootScope.$digest();
+        expect(lowercase(element.css('background-color'))).toEqual('red');
+      }));
+    });
   });
 
   describe('addPropertySecurityContext', function() {
