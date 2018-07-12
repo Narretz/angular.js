@@ -3469,9 +3469,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
     function addPropertyDirective(node, directives, attrName, propName) {
       if (EVENT_HANDLER_ATTR_REGEXP.test(propName)) {
-        throw $compileMinErr('nodomevents',
-            'Property bindings for HTML DOM event properties are disallowed.  Please use the ' +
-                'ng- versions (such as ng-click or ng-on-click rather than ng-prop-onclick) instead.');
+        throw $compileMinErr('nodomevents', 'Property bindings for HTML DOM event properties are disallowed');
       }
 
       var nodeName = nodeName_(node);
@@ -3528,9 +3526,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
       }
 
       if (EVENT_HANDLER_ATTR_REGEXP.test(name)) {
-        throw $compileMinErr('nodomevents',
-            'Interpolations for HTML DOM event attributes are disallowed.  Please use the ' +
-                'ng- versions (such as ng-click or ng-on-click rather than onclick) instead.');
+        throw $compileMinErr('nodomevents', 'Interpolations for HTML DOM event attributes are disallowed');
       }
 
       directives.push({
