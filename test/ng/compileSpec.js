@@ -11395,7 +11395,7 @@ describe('$compile', function() {
     }));
 
     it('should use $$sanitizeUri', function() {
-      var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri');
+      var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri').and.returnValue('someSanitizedUrl');
       module(function($provide) {
         $provide.value('$$sanitizeUri', $$sanitizeUri);
       });
@@ -11403,7 +11403,6 @@ describe('$compile', function() {
         element = $compile('<img src="{{testUrl}}"></img>')($rootScope);
         $rootScope.testUrl = 'someUrl';
 
-        $$sanitizeUri.and.returnValue('someSanitizedUrl');
         $rootScope.$apply();
         expect(element.attr('src')).toBe('someSanitizedUrl');
         expect($$sanitizeUri).toHaveBeenCalledWith($rootScope.testUrl, true);
@@ -11480,7 +11479,7 @@ describe('$compile', function() {
       expect(element.attr('srcset')).toEqual('http://example.com');
     }));
 
-    it('does not work with trusted values', inject(function($rootScope, $compile, $sce) {
+    it('should NOT work with trusted values', inject(function($rootScope, $compile, $sce) {
       // A limitation of the approach used for srcset is that you cannot use `trustAsUrl`.
       // Use trustAsHtml and ng-bind-html to work around this.
       element = $compile('<img srcset="{{testUrl}}"></img>')($rootScope);
@@ -11830,7 +11829,7 @@ describe('$compile', function() {
     }));
 
 
-    it('should pass through $sce.trustAs() values in action attribute', inject(function($compile, $rootScope, $sce) {
+    it('should pass through $sce.trustAsResourceUrl() values in action attribute', inject(function($compile, $rootScope, $sce) {
       element = $compile('<form action="{{testUrl}}"></form>')($rootScope);
       $rootScope.testUrl = $sce.trustAsResourceUrl('javascript:doTrustedStuff()');
       $rootScope.$apply();
@@ -12046,7 +12045,7 @@ describe('$compile', function() {
         expect(attrs.ngAttrSuperTitle).toBeUndefined();
         expect(attrs.$attr.ngAttrSuperTitle).toBeUndefined();
 
-        //Note the casing is incorrect: https://github.com/angular/angular.js/issues/16624
+        // Note the casing is incorrect: https://github.com/angular/angular.js/issues/16624
         expect(attrs.myCameltitle).toBe('56');
         expect(attrs.$attr.myCameltitle).toBe('my-camelTitle');
         expect(attrs.ngAttrMyCameltitle).toBeUndefined();
@@ -12163,14 +12162,11 @@ describe('$compile', function() {
 
     it('should call the listener synchronously', inject(function($compile, $rootScope) {
       element = $compile('<span ng-on-foo="fooEvent()"></span>')($rootScope);
-      $rootScope.fooEvent = jasmine.createSpy('fooEvent').and.callFake(function() {
-        $rootScope.value = 'newValue';
-      });
+      $rootScope.fooEvent = jasmine.createSpy('fooEvent');
 
       element.triggerHandler('foo');
 
       expect($rootScope.fooEvent).toHaveBeenCalledOnce();
-      expect($rootScope.value).toBe('newValue');
     }));
 
     it('should support multiple events on a single element', inject(function($compile, $rootScope) {
@@ -12262,7 +12258,7 @@ describe('$compile', function() {
       $rootScope.value = 'test';
       element = $compile('<a ng-prop-href="\'test/\' + value"></a>')($rootScope);
       $rootScope.$digest();
-      expect(element.prop('href').slice(-'/test/test'.length)).toBe('/test/test');
+      expect(element.prop('href')).toMatch(/\/test\/test$/);
     }));
 
     it('should work if they are prefixed with x- or data- and different prefixes', inject(function($rootScope, $compile) {
@@ -12309,7 +12305,7 @@ describe('$compile', function() {
       });
       inject(function($compile, $rootScope) {
         $compile('<div attr-exposer ng-prop-title="12" ng-prop-super-title="34" ng-prop-my-camel_title="56">')($rootScope);
-        $rootScope.$apply();
+        $rootScope.$digest();
 
         expect(attrs.title).toBeUndefined();
         expect(attrs.$attr.title).toBeUndefined();
@@ -12348,7 +12344,6 @@ describe('$compile', function() {
 
     it('should disallow property binding to onclick', inject(function($compile, $rootScope) {
       // All event prop bindings are disallowed.
-      $rootScope.onClickJs = function() {};
       expect(function() {
           $compile('<button ng-prop-onclick="onClickJs"></script>');
         }).toThrowMinErr(
@@ -12491,7 +12486,7 @@ describe('$compile', function() {
       }));
 
       it('should use $$sanitizeUri', function() {
-        var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri');
+        var $$sanitizeUri = jasmine.createSpy('$$sanitizeUri').and.returnValue('someSanitizedUrl');
         module(function($provide) {
           $provide.value('$$sanitizeUri', $$sanitizeUri);
         });
@@ -12499,7 +12494,6 @@ describe('$compile', function() {
           element = $compile('<img ng-prop-src="testUrl"></img>')($rootScope);
           $rootScope.testUrl = 'someUrl';
 
-          $$sanitizeUri.and.returnValue('someSanitizedUrl');
           $rootScope.$apply();
           expect(element.prop('src')).toMatch(/^http:\/\/.*\/someSanitizedUrl$/);
           expect($$sanitizeUri).toHaveBeenCalledWith($rootScope.testUrl, true);
@@ -12524,14 +12518,14 @@ describe('$compile', function() {
 
     ['img', 'source'].forEach(function(srcsetElement) {
       describe(srcsetElement + '[srcset] sanitization', function() {
-        it('should not error if srcset is undefined', inject(function($compile, $rootScope) {
+        it('should not error if srcset is blank', inject(function($compile, $rootScope) {
           element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
           // Set srcset to a value
           $rootScope.testUrl = 'http://example.com/';
           $rootScope.$digest();
           expect(element.prop('srcset')).toBe('http://example.com/');
 
-          // Now set it to undefined
+          // Now set it to blank
           $rootScope.testUrl = '';
           $rootScope.$digest();
           expect(element.prop('srcset')).toBe('');
@@ -12551,7 +12545,7 @@ describe('$compile', function() {
           expect(element.prop('srcset')).toEqual('http://example.com');
         }));
 
-        it('does not work with trusted values', inject(function($rootScope, $compile, $sce) {
+        it('should NOT work with trusted values', inject(function($rootScope, $compile, $sce) {
           // A limitation of the approach used for srcset is that you cannot use `trustAsUrl`.
           // Use trustAsHtml and ng-bind-html to work around this.
           element = $compile('<' + srcsetElement + ' ng-prop-srcset="testUrl"></' + srcsetElement + '>')($rootScope);
@@ -12806,7 +12800,7 @@ describe('$compile', function() {
       }));
 
 
-      it('should pass through $sce.trustAs() values in action property', inject(function($compile, $rootScope, $sce) {
+      it('should pass through $sce.trustAsResourceUrl() values in action property', inject(function($compile, $rootScope, $sce) {
         element = $compile('<form ng-prop-action="testUrl"></form>')($rootScope);
         $rootScope.testUrl = $sce.trustAsResourceUrl('javascript:doTrustedStuff()');
         $rootScope.$apply();
@@ -12983,7 +12977,7 @@ describe('$compile', function() {
   describe('addPropertySecurityContext', function() {
     function testProvider(provider) {
       module(provider);
-      inject(function($compile) { /* done! */});
+      inject(function($compile) { /* done! */ });
     }
 
     it('should allow adding new properties', function() {

@@ -1591,19 +1591,19 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
    * The security context of DOM Properties.
    * @private
    */
-  var PROP_CONTEXTS = Object.create(null);
+  var PROP_CONTEXTS = createMap();
 
   /**
    * @ngdoc method
    * @name $compileProvider#addPropertySecurityContext
    * @description
    *
-   * Defines the security context for DOM properties bound by ng-prop-*
+   * Defines the security context for DOM properties bound by ng-prop-*.
    *
    * @param {string} elementName The element name or '*' to match any element.
    * @param {string} propertyName The DOM property name.
-   * @param {string} ctx The context in which this value is safe for use, e.g. $sce.URL,
-   * $sce.RESOURCE_URL, $sce.HTML, $sce.JS or $sce.CSS.
+   * @param {string} ctx The {@link $sce} security context in which this value is safe for use, e.g. `$sce.URL`
+   * @returns {object} `this` for chaining
    */
   this.addPropertySecurityContext = function(elementName, propertyName, ctx) {
     var key = (elementName.toLowerCase() + '|' + propertyName.toLowerCase());
@@ -1613,6 +1613,7 @@ function $CompileProvider($provide, $$sanitizeUriProvider) {
     }
 
     PROP_CONTEXTS[key] = ctx;
+    return this;
   };
 
   /* Default property contexts.
