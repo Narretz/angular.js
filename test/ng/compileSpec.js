@@ -12878,13 +12878,13 @@ describe('$compile', function() {
         it('should NOT set html for untrusted values', inject(function($rootScope, $compile) {
           element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
           $rootScope.html = '<div onclick="">hello</div>';
-          expect(function() { $rootScope.$digest(); }).toThrow();
+          expect(function() { $rootScope.$digest(); }).toThrowMinErr('$sce', 'unsafe', 'Attempting to use an unsafe value in a safe context.');
         }));
 
         it('should NOT set html for wrongly typed values', inject(function($rootScope, $compile, $sce) {
           element = $compile('<div ng-prop-inner_h_t_m_l="html"></div>')($rootScope);
           $rootScope.html = $sce.trustAsCss('<div onclick="">hello</div>');
-          expect(function() { $rootScope.$digest(); }).toThrow();
+          expect(function() { $rootScope.$digest(); }).toThrowMinErr('$sce', 'unsafe', 'Attempting to use an unsafe value in a safe context.');
         }));
 
         it('should set html for trusted values', inject(function($rootScope, $compile, $sce) {
@@ -12962,13 +12962,13 @@ describe('$compile', function() {
       it('should NOT set style for untrusted values', inject(function($rootScope, $compile) {
         element = $compile('<div ng-prop-style="style"></div>')($rootScope);
         $rootScope.style = 'background: red';
-        expect(function() { $rootScope.$digest(); }).toThrow();
+        expect(function() { $rootScope.$digest(); }).toThrowMinErr('$sce', 'unsafe', 'Attempting to use an unsafe value in a safe context.');
       }));
 
       it('should NOT set style for wrongly typed values', inject(function($rootScope, $compile, $sce) {
         element = $compile('<div ng-prop-style="style"></div>')($rootScope);
         $rootScope.style = $sce.trustAsHtml('background: red');
-        expect(function() { $rootScope.$digest(); }).toThrow();
+        expect(function() { $rootScope.$digest(); }).toThrowMinErr('$sce', 'unsafe', 'Attempting to use an unsafe value in a safe context.');
       }));
 
       it('should set style for trusted values', inject(function($rootScope, $compile, $sce) {
