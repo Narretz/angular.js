@@ -3,7 +3,7 @@
 @fullName DOM Property Security Context Overrid
 @description
 
-This error occurs when the security context for a property is defined via {@link ng.$compilerProvider#addPropertySecurityContext addPropertySecurityContext()} multiple times under different security contexts.
+This error occurs when the security context for a property is defined via {@link ng.$compileProvider#addPropertySecurityContext addPropertySecurityContext()} multiple times under different security contexts.
 
 For example:
 
